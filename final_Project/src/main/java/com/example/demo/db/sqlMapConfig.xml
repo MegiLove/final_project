@@ -7,6 +7,7 @@
   <typeAliases>
   	<typeAlias type="com.example.demo.vo.CartVO" alias="cartVO"/>
   	<typeAlias type="com.example.demo.vo.CartProductVO" alias="cartProductVO"/>
+  	<typeAlias type="com.example.demo.vo.Customer_orderVO" alias="customer_orderVO"/>
   </typeAliases>
   <environments default="development">
     <environment id="development">
@@ -20,6 +21,7 @@
     </environment>
   </environments>
   <mappers>
-    <mapper resource="com/example/demo/db/CartMapper.xml"/>
+    <mapper resource="com/example/demo/db/cartMapper.xml"/>
+    <mapper resource="com/example/demo/db/customer_orderMapper.xml"/>
   </mappers>
 </configuration>

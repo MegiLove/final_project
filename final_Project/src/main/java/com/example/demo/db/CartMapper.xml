@@ -21,6 +21,10 @@
   
   <delete id="deleteCart">
     DELETE FROM cart WHERE cart_no = #{cart_no}
-    </delete>
+  </delete>
+  
+  <update id="cartOrder" parameterType="cartVO">   
+    	UPDATE cart SET isOrder = 1 WHERE cart_no = #{cart_no} AND cust_id = 'envayu'	
+  </update> 	
   
 </mapper>
