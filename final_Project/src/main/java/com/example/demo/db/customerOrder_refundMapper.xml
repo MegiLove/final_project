@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="customerOrder_refund">
+  <select id="getNextNo" resultType="java.lang.Integer">
+  	select nvl(max(refund_no),0)+1 from customerOrder_refund
+  </select>
+  
+  <insert id="insertRefund" parameterType="CustomerOrder_refundVO">
+  	insert into customerOrder_refund(refund_no, order_no, refund_code) values(#{refund_no},#{order_no},#{refund_code})
+  </insert>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qna">
+  <select id="detailQna" resultType="qnaVO">
+  	select * from qna where qna_no=#{qna_no}
+  </select>
+  
+  <update id="updateQna" parameterType="qnaVO">
+  	update qna set qna_title=#{qna_title}, qna_content=#{qna_content}, qna_img=#{qna_img} where qna_no=#{qna_no}
+  </update>
+  
+  <delete id="deleteQna">
+  	delete qna where qna_no=#{qna_no}
+  </delete>
+  
+  <select id="getNextNo" resultType="java.lang.Integer">
+  	select nvl(max(qna_no),0)+1 from qna
+  </select>
+  
+  <select id="listQna" resultType="qnaVO">
+	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d, customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no and o.cust_id=#{cust_id}
+  </select>
+  
+  <insert id="insertQna" parameterType="qnaVO">
+  	insert into qna (qna_no, detail_no, qna_title, qna_content, qna_img,qna_date, qna_answer) values(#{qna_no},#{detail_no},#{qna_title},#{qna_content},#{qna_img},sysdate,null)
+  </insert>
+
+</mapper>

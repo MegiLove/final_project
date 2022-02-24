@@ -56,10 +56,12 @@ public class CartController {
 		return re;
 	}
 
-	@RequestMapping(value = "/market/cartOrder")
-	public CartProductVO CheckOrder(HttpServletRequest request, HttpServletResponse response, CartVO c) {
-		CartProductVO cp= dao.cartOrder(c);
-		return cp;
+	@RequestMapping(value = "/market/orderPage", method = RequestMethod.POST)
+	public ModelAndView CheckOrder(HttpServletRequest request, HttpServletResponse response) {
+		System.out.println(request.getAttribute("cpList"));
+		ModelAndView mav = new ModelAndView();
+		//mav.addObject("orderPage", c);
+		return mav;
 	}
 
 }

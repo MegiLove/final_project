@@ -5,9 +5,21 @@
 <configuration>
   <properties resource="com/example/demo/db/db.properties"/>
   <typeAliases>
+  	<typeAlias type="com.example.demo.vo.ProductVO" alias="productVO"/>
+  	<typeAlias type="com.example.demo.vo.ReviewVO" alias="reviewVO"/>
+  	<typeAlias type="com.example.demo.vo.ListReviewVO" alias="listReviewVO"/>
+  	<typeAlias type="com.example.demo.vo.ContentReviewVO" alias="contentReviewVO"/>
+  	<typeAlias type="com.example.demo.vo.CustomerVO" alias="customerVO"/>
+  	<typeAlias type="com.example.demo.vo.QnaVO" alias="qnaVO"/>
+  	<typeAlias type="com.example.demo.vo.MonthTotalVO" alias="monthTotalVO"/>
+  	<typeAlias type="com.example.demo.vo.Customer_orderVO" alias="customer_orderVO"/>
+  	<typeAlias type="com.example.demo.vo.CustomerOrder_detailVO" alias="customerOrder_detailVO"/>
+  	<typeAlias type="com.example.demo.vo.ListOrderVO" alias="listOrderVO"/>
+  	<typeAlias type="com.example.demo.vo.OrderCancelVO" alias="orderCancelVO"/>
+  	<typeAlias type="com.example.demo.vo.CustomerOrder_refundVO" alias="customerOrder_refundVO"/>
+  	<typeAlias type="com.example.demo.vo.ListDetailVO" alias="listDetailVO"/>
   	<typeAlias type="com.example.demo.vo.CartVO" alias="cartVO"/>
   	<typeAlias type="com.example.demo.vo.CartProductVO" alias="cartProductVO"/>
-  	<typeAlias type="com.example.demo.vo.Customer_orderVO" alias="customer_orderVO"/>
   </typeAliases>
   <environments default="development">
     <environment id="development">
@@ -21,7 +33,13 @@
     </environment>
   </environments>
   <mappers>
-    <mapper resource="com/example/demo/db/cartMapper.xml"/>
+    <mapper resource="com/example/demo/db/productMapper.xml"/>
+    <mapper resource="com/example/demo/db/reviewMapper.xml"/>
+    <mapper resource="com/example/demo/db/customerMapper.xml"/>
+    <mapper resource="com/example/demo/db/qnaMapper.xml"/>
     <mapper resource="com/example/demo/db/customer_orderMapper.xml"/>
+    <mapper resource="com/example/demo/db/customerOrder_detailMapper.xml"/>
+    <mapper resource="com/example/demo/db/customerOrder_refundMapper.xml"/>
+    <mapper resource="com/example/demo/db/cartMapper.xml"/>
   </mappers>
 </configuration>

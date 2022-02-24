@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="customer_order">
-  <insert id="insertCustomer_order" parameterType="customer_orderVO">
-  	insert into customer_order(order_no,cust_id,order_date,order_addr1,order_addr2,order_addr3,status_code,payment_code) values(?,?,sysdate,?,?,?,0,?)
-  </insert>
-  
   <select id="listOrder" resultType="ListOrderVO">
-	select order_date, order_no, status_code from customer_order where cust_id=?
+  	select order_date, order_no, status_code from customer_order where cust_id=#{cust_id}
   </select>
   
   <select id="orderCancelPage" resultType="OrderCancelVO">
-	select o.order_date, o.order_no, c.cust_name, p.product_img, d.detail_price, d.detail_cnt, pay.payment_code
-from customer_order o, customer c, product p, customerOrder_detail d, payment pay
-where c.cust_id=o.cust_id and p.product_no=d.product_no and d.order_no=o.order_no and o.payment_code=pay.payment_code and o.order_no=?
+  	select o.order_date, o.order_no, c.cust_name, p.product_img, d.detail_price, d.detail_cnt, pay.payment_code 
+	from customer_order o, customer c, product p, customerOrder_detail d, payment pay 
+	where c.cust_id=o.cust_id and p.product_no=d.product_no and d.order_no=o.order_no and o.payment_code=pay.payment_code and o.order_no=#{order_no} 
   </select>
   
-  <update id="orderCancelCheck" parameterType="java.lang.Integer">   
-   	update customer_order set status_code=4 where order_no=?
+  <update id="orderCancelCheck" parameterType="java.lang.Integer">
+  	update customer_order set status_code=4 where order_no=#{order_no}
   </update>
   
-  <select id="getNextNo" resultType="java.lang.Integer">
-  	select nvl(max(cart_no),0)+1 from cart
-  </select>	
+  <select id="monthTotal" resultType="monthTotalVO">
+	select month,sum(total) from (select substr(order_date,4,2) month,total from customer_order o,(select order_no,sum(detail_price*detail_cnt) total from customerorder_detail group by order_no) s where o.order_no = s.order_no)  group by month
+  </select>
   
+   <insert id="insertCustomer_order" parameterType="customer_orderVO">
+  	insert into customer_order(order_no,cust_id,order_date,order_addr1,order_addr2,order_addr3,status_code,payment_code) values(#{order_no},#{cust_id},sysdate,#{order_addr1},#{order_addr2},#{order_addr3},0,#{payment_code})
+  </insert>
 </mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="review">
+  <select id="listReviewWrite" resultType="listReviewVO">
+  	select c.order_no,review_no, d.detail_no, product_img, product_name from product p, customerOrder_detail d, review r,customer_order c
+	where c.order_no=d.order_no and d.detail_no=r.detail_no and p.product_no=d.product_no and review_code=0 and cust_id=#{cust_id} order by c.order_no desc
+  </select>
+  
+  <select id="listReviewComplete" resultType="contentReviewVO">
+  	select review_no,product_name, review_title, review_content, review_img from review r, customerOrder_detail d, product p,customer_order c 
+	where c.order_no=d.order_no and d.detail_no=r.detail_no and d.product_no = p.product_no and review_code=1 and cust_id=#{cust_id} order by review_no desc
+  </select>
+  
+  <delete id="deleteReview">
+  	delete review where review_no=#{review_no}
+  </delete>
+  
+  <select id="contentReview" resultType="contentReviewVO">
+  	select product_img,product_name, review_title, review_content, review_img from review r, customerOrder_detail c, product p
+	where c.detail_no=r.detail_no and c.product_no = p.product_no and review_no=#{review_no}
+  </select>
+  
+  <update id="updateReview" parameterType="reviewVO">
+  	update review set review_title=#{review_title}, review_content=#{review_content}, review_img=#{review_img}, review_code=#{review_code} where review_no=#{review_no}
+  </update>
+  
+  <select id="findByNo" resultType="reviewVO">
+  	select * from review where review_no=#{review_no}
+  </select>
+</mapper>

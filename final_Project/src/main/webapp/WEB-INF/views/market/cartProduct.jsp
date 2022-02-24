@@ -7,7 +7,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 </head>
 <body>
@@ -22,28 +22,29 @@
 				 <input type="hidden" name="product_no" value="${cp.product_no}">
 				 <input type="hidden" name="cart_no" value="${cp.cart_no}">
 				 <input type="hidden" name="cust_id" value="${cp.cust_id}">
+				 <input type="hidden" name="product_img" value="${cp.product_img}">
+				 <input type="hidden" name="product_name" value="${cp.product_name}">
+				 <input type="hidden" name="product_price" value="${cp.product_price}">
 				<td name="product_img">${cp.product_img}</td>
 				<td name="product_name">${cp.product_name}</td>
-				<td name="product_price">${cp.product_price}</td>
+				<td name="product_price">${cp.product_price}원</td>
 				<td>
 				<form action="updatecnt" method="post">
 				<input type="text" name="product_cnt" value="${cp.product_cnt}">
 				</td>
-				<td><c:set var="result" value="${cp.product_price*cp.product_cnt}"/>${result}</td>
+				<td><c:set var="result" value="${cp.product_price*cp.product_cnt}"/>${result}원</td>
 				<td><br><button type="button" onclick="javascript:CartUpdate(product_cnt,product_no, cart_no, cust_id, ${loop.index})">변경</button>&emsp;</td>
 				<td><br><button type="button" onclick="javascript:CartDelete(cart_no, ${loop.index})">삭제</button>&emsp;</td>				
 			</tr>		
 		</c:forEach>
-			
 			<tr>
-				<td colspan=7 style="text-align:right;">총 상품 금액 : <input name="total_sum" type="text" size="20" value="0" readonly></td>
+				<td colspan=7 style="text-align:right;">총 상품 금액 : <input name="total_sum" type="text" size="20" value="0" readonly>원</td>
 			</tr>
 			
 			<tr align="center">
 				<td colspan=7><button type="button" onclick="javascript:CheckOrder(checkBoxForm)">선택 상품 주문</button>
 				&emsp;<button type="button" onclick="javascript:AllOrder(checkBoxForm);">전체 상품 주문</button></td>
 			</tr>			
-		
 	</table>
 	</form>
 	

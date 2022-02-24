@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="product">
+  <select id="listProduct" resultType="productVO">
+    select product_no,product_img,product_name,product_price from 
+   (select rownum num,product_no,product_img,product_name,product_price from 
+   (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} order by product_date desc)) 
+	where num between #{start} and #{end} 
+  </select>
+  
+  <select id="getTotalRecord" resultType="java.lang.Integer">
+  	select count(*) from product where category_code=#{category_code}
+  </select>    
+  
+  <!-- admin -->
+  <select id="mgr_listProduct" resultType="productVO">
+   select product_no, category_code, product_name from product order by product_no
+  </select>
+  
+   <select id="mgr_detailProduct" resultType="productVO">
+   select * from product where product_no=#{product_no}
+  </select>
+  
+  <insert id="mgr_insertProduct" parameterType="productVO">
+  	insert into product ( product_no, category_code, product_name, product_price, product_desc, product_date, product_img, product_margin) values(#{product_no},#{category_code},#{product_name},#{product_price},#{product_desc},#{product_date},#{product_img},0)
+  </insert>
+
+  <update id="mgr_updateProduct" parameterType="productVO">
+  update product set product_price = #{product_price}, product_margin=#{product_margin} where product_no=#{product_no}
+  </update>
+  
+  <delete id="mgr_deleteProduct" parameterType="productVO">
+  	delete product where product_no=#{product_no}
+  </delete>
+  
+</mapper>
