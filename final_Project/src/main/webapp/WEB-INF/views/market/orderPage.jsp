@@ -63,7 +63,7 @@
   		console.log(cpList.length);
   		var tr_table=""
   				for (var i = 0; i < cpList.length; i++) {  
-  	  	            var tr_table = '<tr><td>'+cpList[i].product_img+'</td><td>'+cpList[i].product_name+'</td><td>'+cpList[i].product_cnt+'개'+'</td><td>'+cpList[i].product_price+'원'+'</td></tr>'
+  	  	            var tr_table = '<tr><td><img src="/images/'+cpList[i].product_img+'" width="100" height="100"></td><td>'+cpList[i].product_name+'</td><td>'+cpList[i].product_cnt+'개'+'</td><td>'+cpList[i].product_price+'원'+'</td></tr>'
   	  	            $("#product_tbody").append(tr_table);
   	  	        	console.log(tr_table);
   	  	        }			

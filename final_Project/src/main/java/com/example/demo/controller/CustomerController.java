@@ -63,7 +63,7 @@ public class CustomerController {
 		if(re == 1) {
 			msg = cust_id + "님, 로그인 하였습니다.";
 			session.setAttribute("member",dao.detailCustomer(cust_id));
-			session.setAttribute("cust_id", cust_id);
+			session.setAttribute("now_id", cust_id);
 			session.setAttribute("role", dao.getRole(cust_id));
 		}else { //re가 -1
 			msg = "아이디가 존재하지 않습니다.";

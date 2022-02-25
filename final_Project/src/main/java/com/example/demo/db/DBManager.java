@@ -58,14 +58,23 @@ public class DBManager {
 		return no;
 	}
 	
-	public static List<ProductVO> mgr_listProduct(){
+	public static List<ProductVO> mgr_listProduct(HashMap map){
 		SqlSession session = factory.openSession();
-		List<ProductVO> list = session.selectList("product.mgr_listProduct");
+		List<ProductVO> list = session.selectList("product.mgr_listProduct",map);
 		session.close();
 		return list;
 	}
 	
+	public static int mgr_getTotalRecord() {
+		SqlSession session = factory.openSession();
+		int no = session.selectOne("product.mgr_getTotalRecord");
+		System.out.println("mgr_totalRecord:"+no);
+		session.close();
+		return no;
+	}
+	
 	public static int mgr_insertProduct(ProductVO p) {
+		p.setProduct_no(product_getNextNo());
 		SqlSession session = factory.openSession();
 		int re = session.insert("product.mgr_insertProduct",p);
 		session.commit();
@@ -94,6 +103,13 @@ public class DBManager {
 		session.commit();
 		session.close();
 		return re;
+	}
+	
+	public static int product_getNextNo() {
+		SqlSession session = factory.openSession();
+		int product_no = session.selectOne("product.getNextNo");
+		session.close();
+		return product_no;
 	}
 	
 	//=========================================

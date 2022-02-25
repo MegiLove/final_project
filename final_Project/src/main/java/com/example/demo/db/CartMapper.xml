@@ -8,7 +8,7 @@
   </insert>
   
   <select id="cartProduct" resultType="cartProductVO">
-  	select p.product_no,cart_no, cust_id, product_img,product_name,product_price,product_cnt from product p,cart c where p.product_no=c.product_no and cust_id='envayu' order by cart_no desc
+  	select p.product_no,cart_no, cust_id, product_img,product_name,product_price,product_cnt from product p,cart c where p.product_no=c.product_no and cust_id=#{cust_id} order by cart_no desc
   </select>
   
   <select id="getNextNo" resultType="java.lang.Integer">
@@ -16,7 +16,7 @@
   </select>
   
   <update id="updateCart" parameterType="cartVO">   
-    UPDATE cart SET product_cnt= #{product_cnt} WHERE product_no= #{product_no} AND cust_id= 'envayu'	
+    UPDATE cart SET product_cnt= #{product_cnt} WHERE product_no= #{product_no} AND cust_id= #{cust_id}	
   </update>
   
   <delete id="deleteCart">
@@ -24,7 +24,7 @@
   </delete>
   
   <update id="cartOrder" parameterType="cartVO">   
-    	UPDATE cart SET isOrder = 1 WHERE cart_no = #{cart_no} AND cust_id = 'envayu'	
+    	UPDATE cart SET isOrder = 1 WHERE cart_no = #{cart_no} AND cust_id = #{cust_id}	
   </update> 	
   
 </mapper>

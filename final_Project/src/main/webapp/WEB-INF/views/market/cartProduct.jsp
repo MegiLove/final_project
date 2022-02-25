@@ -21,11 +21,11 @@
 				 <input type="hidden" name="a" value="${loop.count}">
 				 <input type="hidden" name="product_no" value="${cp.product_no}">
 				 <input type="hidden" name="cart_no" value="${cp.cart_no}">
-				 <input type="hidden" name="cust_id" value="${cp.cust_id}">
+				 <input type="hidden" name="cust_id" value="${now_id}">
 				 <input type="hidden" name="product_img" value="${cp.product_img}">
 				 <input type="hidden" name="product_name" value="${cp.product_name}">
 				 <input type="hidden" name="product_price" value="${cp.product_price}">
-				<td name="product_img">${cp.product_img}</td>
+				<td name="product_img"><img src="/images/${cp.product_img }" width="100" height="100"></td>
 				<td name="product_name">${cp.product_name}</td>
 				<td name="product_price">${cp.product_price}원</td>
 				<td>

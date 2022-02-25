@@ -16,8 +16,15 @@
   
   <!-- admin -->
   <select id="mgr_listProduct" resultType="productVO">
-   select product_no, category_code, product_name from product order by product_no
+    select product_no,category_code,product_name from 
+   (select rownum num,product_no,category_code,product_name from 
+   (select product_no,category_code,product_name from product order by product_no desc)) 
+	where num between #{start} and #{end} 
   </select>
+  
+  <select id="mgr_getTotalRecord" resultType="java.lang.Integer">
+  	select count(*) from product
+  </select> 
   
    <select id="mgr_detailProduct" resultType="productVO">
    select * from product where product_no=#{product_no}
@@ -34,5 +41,9 @@
   <delete id="mgr_deleteProduct" parameterType="productVO">
   	delete product where product_no=#{product_no}
   </delete>
+  
+   <select id="getNextNo" resultType="java.lang.Integer">
+  	 select nvl(max(product_no),0)+1 from product
+  </select>
   
 </mapper>

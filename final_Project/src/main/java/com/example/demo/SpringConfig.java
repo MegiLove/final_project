@@ -19,9 +19,4 @@ public class SpringConfig implements WebMvcConfigurer {
 		.addPathPatterns("/admin/**");
 
 	}
-	
-	@Bean
-	public CommonsMultipartResolver multipartResolver() {
-		return new CommonsMultipartResolver();
-	}
 }
