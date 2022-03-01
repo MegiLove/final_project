@@ -10,7 +10,7 @@
 <body>
 	<h2>상품등록</h2>
 	<form action="mgr_insertProduct" method="post" enctype="multipart/form-data">
-		상품번호 : <input type="text" name="product_name" value="${product_no}"><br>
+	    <input type="hidden" name="product_no" value="${product_no}"><br>
 		상품이름 : <input type="text" name="product_name"><br>
 		상품가격 : <input type="text" name="product_price"><br>
 		상품설명 : <input type="text" name="product_desc"><br>

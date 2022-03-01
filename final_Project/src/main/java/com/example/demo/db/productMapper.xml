@@ -31,15 +31,15 @@
   </select>
   
   <insert id="mgr_insertProduct" parameterType="productVO">
-  	insert into product ( product_no, category_code, product_name, product_price, product_desc, product_date, product_img, product_margin) values(#{product_no},#{category_code},#{product_name},#{product_price},#{product_desc},#{product_date},#{product_img},0)
+  	insert into product ( product_no, category_code, product_name, product_price, product_desc, product_date, product_img, product_margin, product_detail) values(#{product_no},#{category_code},#{product_name},#{product_price},#{product_desc},sysdate,#{product_img},0,#{product_detail})
   </insert>
 
   <update id="mgr_updateProduct" parameterType="productVO">
-  update product set product_price = #{product_price}, product_margin=#{product_margin} where product_no=#{product_no}
+  update product set product_name=#{product_name},product_price = #{product_price},product_desc=#{product_desc}, product_margin=#{product_margin}, product_img=#{product_img}, product_detail=#{product_detail} where product_no=#{product_no}
   </update>
   
   <delete id="mgr_deleteProduct" parameterType="productVO">
-  	delete product where product_no=#{product_no}
+  	delete from product where product_no=#{product_no}
   </delete>
   
    <select id="getNextNo" resultType="java.lang.Integer">

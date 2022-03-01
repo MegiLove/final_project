@@ -94,27 +94,36 @@ public class ProductController {
 		
 		//vo에 업로드할 파일이름을 알아온다
 		MultipartFile uploadFile = p.getUploadFile();
+		MultipartFile uploadFiledetail = p.getUploadFiledetail();
+		String fname_detail=uploadFiledetail.getOriginalFilename();
 		String fname = uploadFile.getOriginalFilename();
 		p.setProduct_img(fname);
+		p.setProduct_detail(fname_detail);
+		System.out.println(fname_detail);
 		try {
 			//업로드한 파일의 내용을 받아온다
 			//파일을 바이츠타입으로 반환
 			byte []data = uploadFile.getBytes();
+			byte []data_detail = uploadFiledetail.getBytes();
 			
 			//서버에 파일을 출력하기 위한 스트림을 생성
 			FileOutputStream fos
 				= new FileOutputStream(path + "/" + fname);
-			
+			FileOutputStream fos_detail
+			= new FileOutputStream(path + "/" + fname_detail);
+
 			//서버에 파일을 출력
 			fos.write(data);
+			fos_detail.write(data_detail);
+
 			fos.close();
+			fos_detail.close();
 		}catch (Exception e) {
 			System.out.println("예외발생:"+e.getMessage());
 		}
 		
 		int product_no = dao.product_getNextNo();
 		p.setProduct_no(product_no);
-		
 		int re = dao.mgr_insertProduct(p);
 		ModelAndView mav = new ModelAndView("redirect:/admin/mgr_listProduct");
 		if(re != 1) {
@@ -176,14 +185,18 @@ public class ProductController {
 		
 		//원래 사진이름을 미리 변수에 담아준다
 		String oldFname = p.getProduct_img();
+		String oldFname_detail=p.getProduct_detail();
 		
 		//업로드한 파일의 정보를 받아온다
 		MultipartFile uploadFile = p.getUploadFile();
+		MultipartFile uploadFiledetail = p.getUploadFiledetail();
+		String fname_detail=uploadFiledetail.getOriginalFilename();
 		String fname = uploadFile.getOriginalFilename();
 		
 		try {
 			//업로드한 파일을 바이츠타입으로 변환해서 받아온다
 			byte []data = uploadFile.getBytes();
+			byte []data_detail = uploadFiledetail.getBytes();
 			
 			//만약, 사진도 수정했다면, 업로드한 파일이 있다면 파일을 복사한다
 			if(fname != null && !fname.equals("")) { //업로드한 파일이있나?
@@ -191,6 +204,13 @@ public class ProductController {
 				fos.write(data);
 				fos.close();
 				p.setProduct_img(fname);
+			}
+			
+			if(fname_detail != null && !fname_detail.equals("")) { //업로드한 파일이있나?
+				FileOutputStream fos_detail =  new FileOutputStream(path+"/"+fname_detail);
+				fos_detail.write(data_detail);
+				fos_detail.close();
+				p.setProduct_detail(fname_detail);
 			}
 		}catch (Exception e) {
 			System.out.println("예외발생:"+e.getMessage());
@@ -218,6 +238,7 @@ public class ProductController {
 		//지우려고 하는 상품사진이름을 알아오자
 		//해당상품을 가지고와서 그것의 fname을 미리 oldFname에 담아주자
 		String oldFname = dao.mgr_detailProduct(product_no).getProduct_img();
+		String oldFname_detail = dao.mgr_detailProduct(product_no).getProduct_detail();
 		
 		ModelAndView mav = new ModelAndView("redirect:/admin/mgr_listProduct");
 		int re = dao.mgr_deleteProduct(product_no);
@@ -226,7 +247,9 @@ public class ProductController {
 			mav.addObject("msg","상품삭제에 실패하였습니다.");
 		}else {
 			File file = new File(path+"/"+oldFname);
+			File file_detail = new File(path+"/"+oldFname_detail);
 			file.delete();
+			file_detail.delete();
 		}
 		return mav;
 	}

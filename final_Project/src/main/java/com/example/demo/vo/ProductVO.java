@@ -19,5 +19,6 @@ public class ProductVO {
 	private String category_code;
 	private String product_detail;
 	private MultipartFile uploadFile;
+	private MultipartFile uploadFiledetail;
 
 }
