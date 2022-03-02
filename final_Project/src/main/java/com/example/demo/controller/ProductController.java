@@ -254,4 +254,9 @@ public class ProductController {
 		return mav;
 	}
 	
+	@RequestMapping("/admin/category_sale")
+	public void category_sale() {
+		
+	}
+	
 }

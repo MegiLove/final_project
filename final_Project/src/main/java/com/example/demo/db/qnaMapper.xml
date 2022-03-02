@@ -27,4 +27,16 @@
   	insert into qna (qna_no, detail_no, qna_title, qna_content, qna_img,qna_date, qna_answer) values(#{qna_no},#{detail_no},#{qna_title},#{qna_content},#{qna_img},sysdate,null)
   </insert>
 
+   <update id="updateQna_answer" parameterType="qnaVO">
+  update qna set qna_answer=#{qna_answer} where qna_no=#{qna_no}
+  </update>
+  
+   <select id="mgr_listQna" resultType="qnaVO">
+	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d,  customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no
+  </select>
+  
+   <select id="mgr_detailQna" resultType="qnaVO">
+	select detail_no, qna_title, qna_content, qna_img, qna_date from qna where qna_no=#{qna_no}
+  </select>
+  
 </mapper>

@@ -46,4 +46,14 @@
   	 select nvl(max(product_no),0)+1 from product
   </select>
   
+  <select id="category_sale" resultType="productVO">
+	select product.product_no, product_name 
+from product left outer join (select product_no, count(product_no) cnt 
+from customerOrder_detail group by product_no) a 
+on product.product_no=a.product_no 
+where category_code=#{category_code}
+order by a.cnt desc
+	
+  </select>
+  
 </mapper>

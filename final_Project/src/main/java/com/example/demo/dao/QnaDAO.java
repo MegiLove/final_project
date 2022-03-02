@@ -33,4 +33,16 @@ public class QnaDAO {
 	public int getNextNo() {
 		return DBManager.getNextNo();
 	}
+	
+	public int updateQna_answer(String qna_answer, int qna_no) {
+		return DBManager.updateQna_answer(qna_answer, qna_no);
+	}
+	
+	public List<QnaVO> mgr_listQna(){
+		return DBManager.mgr_listQna();
+	}
+	
+	public QnaVO mgr_detailQna(int qna_no) {
+		return DBManager.mgr_detailQna(qna_no);
+	}
 }

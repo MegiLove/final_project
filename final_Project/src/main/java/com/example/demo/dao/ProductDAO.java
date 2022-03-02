@@ -51,4 +51,8 @@ public class ProductDAO {
 	public int product_getNextNo() {
 		return DBManager.product_getNextNo();
 	}
+	
+	public List<ProductVO> category_sale(String category_code){
+		return DBManager.category_sale(category_code);
+	}
 }

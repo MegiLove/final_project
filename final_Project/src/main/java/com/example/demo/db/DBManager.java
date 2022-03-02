@@ -112,6 +112,13 @@ public class DBManager {
 		return product_no;
 	}
 	
+	public static List<ProductVO> category_sale(String category_code){
+		SqlSession session = factory.openSession();
+		List<ProductVO> list = session.selectList("product.category_sale",category_code);
+		session.close();
+		return list;
+	}
+	
 	//=========================================
 	//review
 	
@@ -296,6 +303,30 @@ public class DBManager {
 		session.commit();
 		session.close();
 		return re;
+	}
+	
+	public static int updateQna_answer(String qna_answer, int qna_no) {
+		SqlSession session = factory.openSession();
+		HashMap map = new HashMap();
+		map.put("qna_answer", qna_answer);
+		map.put("qna_no", qna_no);
+		int re=session.update("qna.update_answer",map);
+		session.close();
+		return re;
+	}
+	
+	public static List<QnaVO> mgr_listQna(){
+		SqlSession session = factory.openSession();
+		List<QnaVO> list = session.selectList("qna.mgr_listQna");
+		session.close();
+		return list;
+	}
+	
+	public static QnaVO mgr_detailQna(int qna_no) {
+		SqlSession session = factory.openSession();
+		QnaVO q = session.selectOne("qna.mgr_detailQna",qna_no);
+		session.close();
+		return q;
 	}
 	
 	//===========================================

@@ -140,6 +140,22 @@ public class QnaController {
 		return mav;
 	}
 	
+	@RequestMapping(value = "/admin/updateQna_answer", method = RequestMethod.GET)
+	public void updateQna_answer_form(Model model, int qna_no,String qna_answer) {
+		model.addAttribute("q",dao.detailQna(qna_no));
+	}
+	
+	@RequestMapping("/admin/mgr_listQna")
+	public void list(Model model) {
+		model.addAttribute("list",dao.mgr_listQna());
+	}
+	
+	@RequestMapping("/admin/mgr_detailQna")
+	public void mgr_detailQna(int qna_no,Model model) {
+		model.addAttribute("q",dao.mgr_detailQna(qna_no));
+	}
+	
+	
 }
 
 
