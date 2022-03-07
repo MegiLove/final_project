@@ -13,5 +13,5 @@ public class ListOrderVO {
 
 	private Date order_date;	
 	private int order_no;	
-	private int status_code;	
+	private String status_name;	
 }

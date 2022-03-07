@@ -22,26 +22,23 @@ public class CustomerDAO {
 		return DBManager.doubleCheck_email(cust_email);
 	}
 	
-	//1. id가 존재하지 않는 경우 int -1을 반환
-	//2. 암호가 일치하지 않는 경우 int 0을 반환
-	//3. 암호가 일치하는 경우 int 1을 반환
 	public int login(String cust_id, String cust_pwd) {
 		return DBManager.login(cust_id, cust_pwd);
 	}
 	
-	public HashMap findId(String cust_name, String cust_phone) {
-		return DBManager.findId(cust_name, cust_phone);
+	public String findId(HashMap map) {
+		return DBManager.findId(map);
 	}
 	
-	public HashMap findPwd(String cust_id, String cust_phone) {
-		return DBManager.findPwd(cust_id, cust_phone);
+	public String findPwd(HashMap map) {
+		return DBManager.findPwd(map);
 	}
 	
 	public CustomerVO detailCustomer(String cust_id) {
 		return DBManager.detailCustomer(cust_id);
 	}
 	
-	public int  updateCustomer(CustomerVO c) {
+	public int updateCustomer(CustomerVO c) {
 		return DBManager.updateCustomer(c);
 	}
 	
@@ -49,7 +46,17 @@ public class CustomerDAO {
 		return DBManager.showCustomer(cust_id);
 	}
 	
+
 	public String getRole(String cust_id) {
 		return DBManager.getRole(cust_id);
 	}
+
+	public int mypage_login(String cust_id) {
+		return DBManager.mypageMain(cust_id);
+	}
+	
+	public String getEmail(String cust_id) {
+		return DBManager.getEmail(cust_id);
+	}
+
 }

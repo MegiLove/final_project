@@ -29,4 +29,17 @@
   <select id="findByNo" resultType="reviewVO">
   	select * from review where review_no=#{review_no}
   </select>
+  
+  <select id="findAllReview" resultType="contentReviewVO">
+  	select review_title,review_content,review_img,cust_id from review r,customerorder_detail d,customer_order o 
+	where r.detail_no = d.detail_no and d.order_no = o.order_no and product_no=#{product_no} and review_code=1 order by review_no desc
+  </select>
+  
+  <select id="getNextNo" resultType="java.lang.Integer">
+ 	select nvl(max(review_no),0)+1 from review
+  </select>
+  
+  <insert id="defaultReview" parameterType="ReviewVO">
+ 	insert into review(review_no,review_code,detail_no,review_title,review_content,review_img) values(#{review_no},0,#{detail_no},null,null,null)
+  </insert>
 </mapper>

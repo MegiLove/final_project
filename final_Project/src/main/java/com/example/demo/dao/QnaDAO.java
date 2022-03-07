@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.db.DBManager;
+import com.example.demo.vo.ListQnaVO;
 import com.example.demo.vo.QnaVO;
 
 @Repository
@@ -34,8 +35,12 @@ public class QnaDAO {
 		return DBManager.getNextNo();
 	}
 	
-	public int updateQna_answer(String qna_answer, int qna_no) {
-		return DBManager.updateQna_answer(qna_answer, qna_no);
+	public List<ListQnaVO> findAllQna(int product_no){
+		return DBManager.findAllQna(product_no);
+	}
+	
+	public int updateQna_answer(QnaVO q) {
+		return DBManager.updateQna_answer(q);
 	}
 	
 	public List<QnaVO> mgr_listQna(){

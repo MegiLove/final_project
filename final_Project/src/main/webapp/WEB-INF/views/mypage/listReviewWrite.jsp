@@ -4,8 +4,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
 </head>
 <body>
 	<div id="container">
@@ -28,7 +29,7 @@
 							<li>
 								<div>
 									<div name="order_no">주문번호  ${r.order_no }</div>
-									<img src="/images/${r.product_img }" width="80px" height="80px" name="product_img">
+									<img src="/images/${r.product_img }" width="80px" height="80px" name="product_img" onerror="this.style.display='none'">
 									<div class="name" name="product_name">${r.product_name }</div>
 									<a href="/mypage/updateReview?review_no=${r.review_no }">후기작성</a>
 								</div>

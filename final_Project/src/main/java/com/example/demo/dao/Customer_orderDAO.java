@@ -32,4 +32,12 @@ public class Customer_orderDAO {
 	public List<MonthTotalVO> monthTotal() {
 		return DBManager.monthTotal();
 	}
+	
+	public int getOrder_count() {
+		return DBManager.getOrder_count();
+	}
+	
+	public int order_getNextNo() {
+		return DBManager.order_getNextNo();
+	}
 }

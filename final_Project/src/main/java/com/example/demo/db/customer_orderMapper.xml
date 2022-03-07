@@ -4,7 +4,7 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="customer_order">
   <select id="listOrder" resultType="ListOrderVO">
-  	select order_date, order_no, status_code from customer_order where cust_id=#{cust_id}
+  	select order_date, order_no, status_name from customer_order o, status_type s where s.status_code=o.status_code and cust_id=#{cust_id} order by order_date desc
   </select>
   
   <select id="orderCancelPage" resultType="OrderCancelVO">
@@ -24,4 +24,12 @@
    <insert id="insertCustomer_order" parameterType="customer_orderVO">
   	insert into customer_order(order_no,cust_id,order_date,order_addr1,order_addr2,order_addr3,status_code,payment_code) values(#{order_no},#{cust_id},sysdate,#{order_addr1},#{order_addr2},#{order_addr3},0,#{payment_code})
   </insert>
+  
+  <select id="getOrder_count" resultType="java.lang.Integer">
+  	select count(*) from customer_order
+  </select>
+  
+  <select id="getNextNo" resultType="java.lang.Integer">
+ 	select nvl(max(order_no),0)+1 from customer_order
+  </select>
 </mapper>

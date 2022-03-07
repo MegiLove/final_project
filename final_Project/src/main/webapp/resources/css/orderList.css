@@ -1,0 +1,55 @@
+* {
+font-family: 'Noto Sans KR', sans-serif;
+}
+
+#ol_detail_link{
+	float: right;
+	text-decoration: none;
+	color: #F2884B;
+	margin-right: 10px;
+	font-weight: 900;
+	margin-right: 30px;
+}
+
+#ol_cancel{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 15px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	float: right;
+	margin-right: 20px;
+	text-decoration: none;
+	text-align: center;
+	padding-top: 5px;
+	font-weight: bold;
+}
+
+.ol_box{
+	width: 700px;
+	height: 150px;
+	margin-top: 10px;
+	margin-bottom: 20px;
+	padding-top: 20px;
+	
+}
+
+#ol_link_name, #ol_content{
+	margin-left: 30px;
+
+}
+
+#ol_hr{
+	float: left;
+	width: 700px;
+}
+
+h2{
+	margin-bottom: 5px;
+	margin-left: 5px;
+}
+#ol_date{
+	margin-left: 5px;
+}

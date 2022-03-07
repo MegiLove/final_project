@@ -22,4 +22,8 @@ public class CustomerOrder_detailDAO {
 	public int insertCustomerOrder_detail(CustomerOrder_detailVO cd) {
 		return DBManager.insertCustomerOrder_detail(cd);
 	}
+	
+	public int orderdetail_getNextNo() {
+		return DBManager.orderdetail_getNextNo();
+	}
 }

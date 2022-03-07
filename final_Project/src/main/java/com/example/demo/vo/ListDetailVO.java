@@ -15,9 +15,9 @@ public class ListDetailVO {
 	private String product_name;	
 	private int product_price;	
 	private int detail_cnt;	
-	private int status_code;	
+	private String status_name;	
 	private int detail_price;	
-	private int payment_code;	
+	private String payment_name;	
 	private String cust_name;	
 	private String cust_phone;	
 	private String cust_addr1;	

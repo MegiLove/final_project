@@ -1,0 +1,20 @@
+.slick-prev{
+	left: 160px;
+	z-index: 1;
+}
+
+.slick-next{
+	right: 160px;
+	z-index: 1;
+}
+
+.slide_div img{
+	margin: auto;
+}
+
+.image_wrap img{
+	max-width: 85%;
+	height: auto;
+	display: block;
+	margin: auto;
+}

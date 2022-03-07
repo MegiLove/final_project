@@ -3,8 +3,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<script type="text/javascript">
+	$(function(){
+		$("#btnSubmit").click(function(){
+			alert("후기를 작성해주셔서 감사합니다.");
+		});
+	});
+</script>
 </head>
 <body>
 	<div id="container">
@@ -37,14 +46,14 @@
 									</td>
 								</tr>
 								<tr>
-									<th>후기작성</th>
+									<th>후기내용</th>
 									<td>
 										<textarea id="fieldCmt" name="review_content" rows="10" cols="100" 
 											placeholder="내용을 입력해주세요.반품/환불 문의는 상품문의로 가능합니다." style="height:202px;"></textarea>
 									</td>
 								</tr>
 								<tr>
-									<th>사진등록</th>
+									<th>첨부파일</th>
 									<td>
 										<input type="hidden" name="review_img">
 										<input type="file" name="uploadFile">
@@ -55,7 +64,7 @@
 								</tr>
 							</tbody>
 						</table>
-						<input type="submit" id="btnSubnmit" class="btn_reg" value="등록하기">
+						<input type="submit" id="btnSubmit" class="btn_reg" value="등록">
 					</div>
 				</form>
 			</div>

@@ -146,8 +146,6 @@ function CheckOrder(frm) {
 		
 		document.body.appendChild(form);
 		form.submit();
-
-		
 	}
 	if (yn && a == 0) {
 		alert("선택된 제품이 없습니다.");
@@ -160,10 +158,21 @@ function AllOrder(frm) {
 	var count = frm.cartBox.length;
 
 	var yn = confirm("전체 상품을 구매하시겠습니까?");
-
+	var cpList = new Array();
 	if (yn) {
 		for (var index = 0; index < count; index++) {
-
+			var data = new Object();
+				data.product_no    = frm.product_no[index].value;
+				data.product_img   = frm.product_img[index].value;
+				data.product_cnt   = frm.product_cnt[index].value;
+				data.cust_id       = frm.cust_id[index].value;
+				data.cart_no       = frm.cart_no[index].value;
+				data.product_name  = frm.product_name[index].value;
+				data.product_price = frm.product_price[index].value;
+				
+				cpList.push(data);
+			
+			/*
 			var product_no = frm.product_no[index].value;
 			$.ajax({
 
@@ -180,7 +189,24 @@ function AllOrder(frm) {
 				error: function(xhr, status, error) { }
 
 			});
+			*/
 		}
-
+		var jsonData = JSON.stringify(cpList);
+		
+		var form = document.createElement('form'); // 폼객체 생성
+		form.setAttribute('method', 'post'); //get,post 가능
+		form.setAttribute('action', "/market/orderPage"); //보내는 url
+		document.charset="utf-8";
+		var objs;
+		objs = document.createElement('input'); // 값이 들어있는 녀석의 형식
+		objs.setAttribute('type', 'hidden'); // 값이 들어있는 녀석의 type
+		objs.setAttribute('name', 'cpList'); // 객체이름
+		objs.setAttribute('value', jsonData); //객체값
+		objs.setAttribute('contentType', 'application/json');
+		form.appendChild(objs);
+		
+		document.body.appendChild(form);
+		form.submit();	
+	
 	}
 }

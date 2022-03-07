@@ -4,9 +4,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
 </head>
 <body>
 	<div id="container">
@@ -26,19 +27,18 @@
 				</div>
 				<div class="marketList_p">
 					<div class="head">
-						<select class="orderTypeSelect" id="selectBoxTest" onchange="changeSelection(this.value)">
-							<option class="orderTypeOption" value="product_date desc" selected="selected"><a href="/market/listProduct?orderColumn=product_date desc">최신순</a></option>
-							<option class="orderTypeOption" value="product_price desc">높은가격순</option>
-							<option class="orderTypeOption" value="product_price">낮은가격순</option>
-						</select>
+						<ul class="list">
+							<li><a href="/market/listProduct?orderType=product_date desc">최신순</a></li><br>
+							<li><a href="/market/listProduct?orderType=product_price desc">높은가격순</a></li><br>
+							<li><a href="/market/listProduct?orderType=product_price">낮은가격순</a></li><br>
+						</ul>
 					</div>
 					<div class="box">
 						<c:forEach var="p" items="${list }">
 							<div class="box_list">
-								<a href="/market/detailProduct"><img class="box_list_img" src="/images/${p.product_img }" width="400" height="400"></a>
+								<a href="/market/detailProduct?product_no=${p.product_no }"><img class="box_list_img" src="/images/${p.product_img }" width="400" height="400"></a>
 								<div class="box_list_name" name="product_name">${p.product_name }</div>
 								<div class="box_list_price" name="product_price">${p.product_price }</div>
-								<button type="button" class="box_list_cart"><img src="/images/shopping-cart.jpg" width="15" height="15"></button>
 							</div>
 						</c:forEach>
 					</div>
@@ -50,6 +50,7 @@
 				</div>
 			</div>
 		</div>
+		<div id="footer"><!-- 푸터 --></div>
 	</div>
 	
 </body>

@@ -8,7 +8,7 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
 </head>
 <body>
 	<h2>장바구니</h2>
@@ -21,7 +21,7 @@
 				 <input type="hidden" name="a" value="${loop.count}">
 				 <input type="hidden" name="product_no" value="${cp.product_no}">
 				 <input type="hidden" name="cart_no" value="${cp.cart_no}">
-				 <input type="hidden" name="cust_id" value="${now_id}">
+				 <input type="hidden" name="cust_id" value="${cust_id}">
 				 <input type="hidden" name="product_img" value="${cp.product_img}">
 				 <input type="hidden" name="product_name" value="${cp.product_name}">
 				 <input type="hidden" name="product_price" value="${cp.product_price}">

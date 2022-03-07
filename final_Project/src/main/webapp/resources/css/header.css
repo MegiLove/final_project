@@ -1,0 +1,107 @@
+#header{
+	position: relative;
+	width: 100%;
+	min-width: 1200px;
+	min-height: 160px;
+}
+
+section{
+	display: block;
+}
+
+#user-area{
+	width: 1100px;
+	margin: 0 auto;
+	text-align: right;
+}
+
+#user-area .list-menu > li{
+	display: inline-block;
+	position: relative;
+	font-size: 13px;
+}
+
+#user-area .list-menu > li:not(:first-child){
+	margin-left: 30px;
+}
+
+#user-area .list-menu > li:not(:first-child):after{
+	position: absolute;
+	left: -15px;
+	top: 50%;
+	margin-top: -7.5px;
+	width: 1px;
+	height: 15px;
+	background: #888;
+	content: '';
+}
+
+.header_sec{
+	position: relative;
+	width: 1100px;
+	margin: 0 auto;
+}
+
+#header .logo{
+	width: 100%;
+	text-align: center;
+	font-size: 0;
+}
+
+#header .logo a{
+	display: inline-block;
+}
+
+#header .logo a img{
+	display: block;
+}
+
+#header .nb{
+	position: relative;
+	width: 1100px;
+	height: 56px;
+	margin: 0 auto;
+}
+
+#header .nb_list{
+	padding-left: 0px;
+}
+
+#header .nb_list img{
+	margin: 5px 14px 0 0;
+}
+
+#header .nb_list .menu1,.menu2{
+	float: left;
+	width: 124px;
+	height: 55px;
+	color: #333;
+	line-height: 25px;
+	text-align: center;
+	font-weight: 600;
+}
+
+#sub-menu{
+	/* visibility: hidden; */
+	position: absolute;
+	transition: all 0.15s ease-in;
+	border: 1px solid #ccc;
+	margin-left: 15px;
+    margin-top: 15px;
+    background: #fff;
+    display: none;
+}
+
+#sub-menu > ul{
+	position: absolute;
+	display: contents;
+}
+
+#sub-menu li{
+	padding: 10px 20px;
+	text-align: left;
+}
+
+#header .nb_list > li:hover #sub-menu{
+	display: block;
+}

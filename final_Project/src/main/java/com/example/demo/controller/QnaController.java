@@ -34,6 +34,13 @@ public class QnaController {
 		model.addAttribute("list",dao.listQna(member.getCust_id()));
 	}
 	
+	@RequestMapping("/mypage/detailQna")
+	public ModelAndView detail(int qna_no) {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("q",dao.detailQna(qna_no));
+		return mav;
+	}
+	
 	@RequestMapping(value = "/mypage/insertQna", method = RequestMethod.GET)
 	public void insert_form(Model model) {
 		model.addAttribute("qna_no",dao.getNextNo());
@@ -54,7 +61,7 @@ public class QnaController {
 		}
 		int re = dao.insertQna(q);
 		if(re != 1) {
-			mav.setViewName("error");
+			mav.setViewName("/common/error");
 			mav.addObject("msg","게시글 등록에 실패하였습니다");
 		}else {//insert성공했으면
 			try {
@@ -70,13 +77,7 @@ public class QnaController {
 		}
 		return mav;
 	}
-	
-	@RequestMapping("/mypage/detailQna")
-	public ModelAndView detail(int qna_no) {
-		ModelAndView mav = new ModelAndView();
-		mav.addObject("q",dao.detailQna(qna_no));
-		return mav;
-	}
+
 	
 	@RequestMapping(value = "/mypage/updateQna", method = RequestMethod.GET)
 	public void update_form(Model model, int qna_no) {
@@ -110,7 +111,7 @@ public class QnaController {
 		int re = dao.updateQna(q);
 		
 		if(re != 1) {
-			mav.setViewName("error");
+			mav.setViewName("/common/error");
 			mav.addObject("msg", "게시글 수정에 실패하였습니다.");
 		}else { //수정에 성공
 			if(oldFname != null && !oldFname.equals("")){ //사진도 수정을 했다면
@@ -131,7 +132,7 @@ public class QnaController {
 		ModelAndView mav = new ModelAndView("redirect:/mypage/listQna");
 		int re = dao.deleteQna(qna_no);
 		if(re != 1) {
-			mav.setViewName("error");
+			mav.setViewName("/common/error");
 			mav.addObject("msg", "게시물 삭제에 실패하였습니다.");
 		}else {
 			File file = new File(path+"/"+oldFname);
@@ -140,9 +141,28 @@ public class QnaController {
 		return mav;
 	}
 	
-	@RequestMapping(value = "/admin/updateQna_answer", method = RequestMethod.GET)
-	public void updateQna_answer_form(Model model, int qna_no,String qna_answer) {
-		model.addAttribute("q",dao.detailQna(qna_no));
+//	@RequestMapping(value = "/admin/updateQna_answer", method = RequestMethod.GET)
+//	public void updateQna_answer_form(Model model, int qna_no) {
+//		model.addAttribute("q",dao.detailQna(qna_no));
+//	}
+	
+	@RequestMapping(value = "/admin/updateQna_answer",method = RequestMethod.GET )
+	public ModelAndView updateQna_answer_form(int qna_no) { //수정한 고객에대해 상태유지해야해서 보이드x 모델앤드뷰 사용
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("q",dao.mgr_detailQna(qna_no));
+		return mav;
+	}
+	
+	@RequestMapping(value = "/admin/updateQna_answer",method = RequestMethod.POST ) //요청하는 서비스명
+	public ModelAndView updateQna_answer_submit(HttpServletRequest request,QnaVO q) {
+		ModelAndView mav = new ModelAndView("redirect:/admin/mgr_listQna");
+		System.out.println(q);
+		int re = dao.updateQna_answer(q);
+		if(re != 1) {
+			mav.setViewName("/common/error");
+			mav.addObject("msg","답글달기에 실패하였습니다.");
+		}
+		return mav;
 	}
 	
 	@RequestMapping("/admin/mgr_listQna")
@@ -153,6 +173,7 @@ public class QnaController {
 	@RequestMapping("/admin/mgr_detailQna")
 	public void mgr_detailQna(int qna_no,Model model) {
 		model.addAttribute("q",dao.mgr_detailQna(qna_no));
+
 	}
 	
 	

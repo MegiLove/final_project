@@ -1,0 +1,10 @@
+.list_goods li{
+	float: left;
+	width: 356px;
+	height: 682;
+	padding: 25px 18px 0 0;
+}
+
+ul{
+	list-style-type: none;
+}

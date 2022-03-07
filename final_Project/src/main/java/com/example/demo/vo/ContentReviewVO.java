@@ -10,4 +10,5 @@ public class ContentReviewVO {
 	private String review_title;
 	private String review_content;
 	private String review_img;
+	private String cust_id;
 }

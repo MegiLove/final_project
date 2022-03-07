@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Customer_orderVO {
-
+	//int로 하면 범위를 넘어섬
 	private int order_no;
 	private String cust_id;	
 	private Date order_date;	

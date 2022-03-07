@@ -4,14 +4,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/mypageCommon.css" type="text/css">
 </head>
 <body>
 	<div id="container">
-		<div id="header"><!-- 헤더 --></div>
+		<div><jsp:include page="../common/header.jsp"></jsp:include></div>
 		<div class="page_article">
-			<div><!-- 메뉴 --></div>
+			<div id="snb">
+				<h2 class="tit_snb">마이보글</h2>
+				<div class="inner_snb">
+					<ul class="list_menu">
+						<li><a href="#">주문 내역</a></li>
+						<li><a href="/mypage/listReviewWrite">상품 후기</a></li>
+						<li><a href="/mypage/listQna">상품 문의</a></li>
+						<li><a href="/mypage/updateCustomer">개인 정보 수정</a></li>
+					</ul>
+				</div>
+			</div>
 			<div class="page_section">
 				<div class="head_article">
 					<h2>상품 후기</h2>

@@ -1,33 +1,56 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="../resources/css/header.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
 </head>
 <body>
-	<div class="header">
-		<section class="user-area"></section>	<!-- 로그인에 따라 바뀌는 곳 -->
+	<div id="header">
+		<section id="user-area">
+		<!-- 로그인에 따라 바뀌는 곳 -->
+			<c:choose>
+				<c:when test="${not empty member }">
+					<ul class="list-menu">
+						<li>${member.cust_name }보글님</li>
+						<li><a href="/mypage/listReviewWrite">마이페이지</a></li>
+						<li><a href="/logout">로그아웃</a></li>
+					</ul>
+				</c:when>
+				<c:otherwise>
+					<ul class="list-menu">
+						<li><a href="/insertCustomer">회원가입</a></li>
+						<li><a href="/login">로그인</a></li>
+					</ul>
+				</c:otherwise>
+			</c:choose>
+		</section>
 		<div class="header_inner">
 			<div class="header_sec">
 				<h1 class="logo">
-					<a href="/main"><img src="/images/BoggleBox_logo.jpg"></a>
+					<a href="/main"><img src="/images/BoggleBox_logo.jpg" style="width: 130px; height: 70px;"></a>
 				</h1>
 				<div class="nb">
 					<ul class="nb_list">
-						<li><a href="market/listProduct?category_code=sp">카테고리</a>
-							<ul class="drop-down">
-								<li><a href="/market/listProduct?category_code=sp">국,찌개</a></li>
-								<li><a href="/market/listProduct?category_code=d">반찬</a></li>
-								<li><a href="/market/listProduct?category_code=s">샐러드</a></li>
-								<li><a href="/market/listProduct?category_code=n">면류</a></li>
-								<li><a href="/market/listProduct?category_code=r">밥,죽</a></li>
-								<li><a href="/market/listProduct?category_code=b">베이커리</a></li>
-								<li><a href="/market/listProduct?category_code=v">비건</a></li>
-							</ul>
+						<li class="menu1">
+							<a href="/market/listProduct?category_code=sp"><img src="/images/icon_nb.jpg">카테고리</a>
+							<div id="sub-menu">
+								<ul>
+									<li><a href="/market/listProduct?category_code=sp">국,찌개</a></li>
+									<li><a href="/market/listProduct?category_code=d">반찬</a></li>
+									<li><a href="/market/listProduct?category_code=s">샐러드</a></li>
+									<li><a href="/market/listProduct?category_code=n">면류</a></li>
+									<li><a href="/market/listProduct?category_code=r">밥,죽</a></li>
+									<li><a href="/market/listProduct?category_code=b">베이커리</a></li>
+									<li><a href="/market/listProduct?category_code=v">비건</a></li>
+								</ul>
+							</div>
 						</li>
-						<li><a href="#">신제품</a></li>
+						<li class="menu2"><a href="/market/recentProduct">신제품</a></li>
 					</ul>
 				</div>
 				<div></div>

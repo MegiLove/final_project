@@ -5,7 +5,7 @@
 <mapper namespace="customerOrder_detail">
 
 	<insert id="insertCustomerOrder_detail" parameterType="customerOrder_detailVO">
-     insert into customerOrder_detail(detail_no,order_no,product_no,detail_price,detail_cnt) values(#{detail_no},#{order_no},#{product_no},#{detail_price},#{detail_cnt});
+     insert into customerOrder_detail(detail_no,order_no,product_no,detail_price,detail_cnt) values(#{detail_no},#{order_no},#{product_no},#{detail_price},#{detail_cnt})
  	</insert>
 	
    <select id="getNextNo" resultType="java.lang.Integer">
@@ -13,9 +13,10 @@
   </select>
   
   <select id="listDetail" resultType="ListDetailVO">
-  	select o.order_no, product_img, product_name,product_price, detail_cnt, status_code, detail_price, payment_code, cust_name, cust_phone, cust_addr1, cust_addr2, cust_addr3 
-	from customer c, product p, customerOrder_detail d, customer_order o 
-	where o.cust_id=c.cust_id and d.product_no=p.product_no and o.order_no=d.order_no and o.order_no=#{order_no}
+  	select o.order_no, product_img, product_name,product_price, detail_cnt, status_name,  
+	detail_price, payment_name, cust_name, cust_phone, cust_addr1, cust_addr2, cust_addr3  
+	from customer c, product p, customerOrder_detail d, customer_order o, status_type s, payment p 
+	where p.payment_code=o.payment_code and s.status_code=o.status_code and o.cust_id=c.cust_id and d.product_no=p.product_no and o.order_no=d.order_no and o.order_no=#{order_no}
   </select>
   
   <select id="totalDetail" resultType="java.lang.Integer">

@@ -1,5 +1,6 @@
 package com.example.demo.dao;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -14,8 +15,8 @@ public class CartDAO {
 		return DBManager.insertCart(c);
 	}
 	
-	public List<CartProductVO> cartProduct(){
-		return DBManager.cartProduct();
+	public List<CartProductVO> cartProduct(String cust_id){
+		return DBManager.cartProduct(cust_id);
 	}
 	
 	public int updateCart(CartVO c) {
@@ -28,5 +29,13 @@ public class CartDAO {
 	
 	public CartProductVO cartOrder(CartVO c) {
 		return DBManager.cartOrder(c);
+	}
+	
+	public int cartGetNextNo() {
+		return DBManager.cartGetNextNo();
+	}
+	
+	public int findByProduct(String cust_id,int product_no) {
+		return DBManager.findByProduct(cust_id,product_no);
 	}
 }

@@ -1,0 +1,111 @@
+* {
+font-family: 'Noto Sans KR', sans-serif;
+} 
+
+.join_form{
+	margin-left: auto;
+	margin-right: auto;
+	width: 700px;
+	padding: 20px 0;
+}
+
+#join_title{
+	width: 580px;
+	height: 30px;
+	margin: 0 auto;
+	margin-bottom:50px;
+	margin-top:50px;
+	text-align: center;
+	
+}
+#join_essential{
+	position: relative;
+	text-align: right;
+	margin-right: 450px;
+}
+.join_form{
+	width: 1000px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+	
+}
+.join_tag{
+	margin-bottom: 50px;
+}
+.join_8{
+	color: #F2884B;
+}
+.join_box{
+	margin-bottom: 30px;
+	outline: none;
+}
+
+#join_tag_id{
+	margin-left: 100px;
+}
+#join_tag_pwd{
+	margin-left: 85px;
+}
+#join_tag_pwdok{
+	margin-left: 58px;
+}
+#join_tag_name{
+	margin-left: 115px;
+}
+#join_tag_phone{
+	margin-left: 100px;
+}
+#join_tag_email{
+	margin-left: 100px;
+}
+#join_tag_addr{
+	margin-left: 113px;
+}
+input {
+  height:30px;
+}
+#cust_addr1, #address{
+	margin-bottom: 20px;	
+}
+#cust_addr3, #address{
+	margin-left: 330px;	
+}
+
+.btnCheck{
+	background-color: white;
+	border-radius: 3px;
+	color: #F2884B;
+	margin-left: 5px;
+	font-size: 15px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+}
+
+#join_submit{
+	margin-left: 430px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 18px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+}
+.result{
+	margin-left: 5px;
+}
+.join_name{
+	margin-left: 180px;
+}
+
+
+
+
+
+
+
+
+

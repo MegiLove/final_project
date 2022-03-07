@@ -5,13 +5,32 @@
 <mapper namespace="product">
   <select id="listProduct" resultType="productVO">
     select product_no,product_img,product_name,product_price from 
-   (select rownum num,product_no,product_img,product_name,product_price from 
-   (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} order by product_date desc)) 
+    (select rownum num,product_no,product_img,product_name,product_price from 
+    (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} 
+    <if test="orderType != null">
+        order by ${orderType} 
+    </if>
+    <if test="orderType == null">
+        order by  product_date desc 
+    </if>
+    )) 
 	where num between #{start} and #{end} 
   </select>
   
   <select id="getTotalRecord" resultType="java.lang.Integer">
   	select count(*) from product where category_code=#{category_code}
+  </select>
+  
+  <select id="recentProduct" resultType="productVO">
+  	select product_no,product_img,product_name,product_price from 
+  	(select product_no,product_img,product_name,product_price from product order by product_date desc) where rownum &lt;= 30 
+  	<if test="orderType != null">
+  		order by ${orderType}
+  	</if>
+  </select>
+  
+  <select id="detailProduct" resultType="productVO">
+  	select product_img,product_desc,product_name,product_price,product_detail from product where product_no=#{product_no}
   </select>    
   
   <!-- admin -->
@@ -20,8 +39,8 @@
    (select rownum num,product_no,category_code,product_name from 
    (select product_no,category_code,product_name from product order by product_no desc)) 
 	where num between #{start} and #{end} 
-  </select>
-  
+  </select> 
+
   <select id="mgr_getTotalRecord" resultType="java.lang.Integer">
   	select count(*) from product
   </select> 

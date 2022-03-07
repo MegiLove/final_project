@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap');
+* {
+	 font-family: 'Noto Sans KR', sans-serif; 
+}
+
+ul{
+	list-style-type: none;
+}
+
+/* 링크 밑줄 제거 */
+a{
+	text-decoration: none;
+}
+
+/* 링크,방문했던 링크 색상을 검은색으로 변경 */
+a:link,a:visited{
+	color: #333;
+}
+
+/* 링크 마우스 올리면 색상 변경 */
+a:hover{
+	color:#F26835;
+}
+
+body{
+	margin: 0;
+}

@@ -4,8 +4,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="EUC-KR">
+<meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
 </head>
 <body>
 	<div id="container">
@@ -35,20 +36,20 @@
 									</td>
 								</tr>
 								<tr>
-									<th>후기작성</th>
+									<th>후기내용</th>
 									<td>
 										<textarea id="fieldCmt" name="review_content" rows="10" cols="100" style="height:202px;">${c.review_content }</textarea>
 									</td>
 								</tr>
 								<tr>
-									<th>사진등록</th>
+									<th>첨부파일</th>
 									<td>
 										<img src="/images/${c.review_img }" onerror="this.style.display='none'">
 									</td>
 								</tr>
 							</tbody>
 						</table>
-						<a href="/mypage/deleteReview/${c.review_no }">삭제하기</a>
+						<a href="/mypage/deleteReview/${c.review_no }">삭제</a>
 					</div>
 				</div>
 			</div>

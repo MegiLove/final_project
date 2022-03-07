@@ -17,6 +17,7 @@ import com.example.demo.vo.CustomerVO;
 import com.example.demo.vo.Customer_orderVO;
 import com.example.demo.vo.ListDetailVO;
 import com.example.demo.vo.ListOrderVO;
+import com.example.demo.vo.ListQnaVO;
 import com.example.demo.vo.ListReviewVO;
 import com.example.demo.vo.MonthTotalVO;
 import com.example.demo.vo.OrderCancelVO;
@@ -56,6 +57,20 @@ public class DBManager {
 		System.out.println("totalRecord:"+no);
 		session.close();
 		return no;
+	}
+	
+	public static List<ProductVO> recentProduct(String orderType){
+		SqlSession session = factory.openSession();
+		List<ProductVO> list = session.selectList("product.recentProduct",orderType);
+		session.close();
+		return list;
+	}
+	
+	public static ProductVO detailProduct(int product_no) {
+		SqlSession session = factory.openSession();
+		ProductVO p = session.selectOne("product.detailProduct", product_no);
+		session.close();
+		return p;
 	}
 	
 	public static List<ProductVO> mgr_listProduct(HashMap map){
@@ -165,6 +180,30 @@ public class DBManager {
 		session.close();
 		return r;
 	}
+	
+	public static List<ContentReviewVO> findAllReview(int product_no){
+		SqlSession session = factory.openSession();
+		List<ContentReviewVO> list = session.selectList("review.findAllReview", product_no);
+		session.close();
+		return list;
+	}
+	
+	public static int review_getNextNo() {
+		SqlSession session = factory.openSession();
+		int review_no = session.selectOne("review.getNextNo");
+		session.close();
+		return review_no;
+	}
+	
+	public static int defaultReview(ReviewVO r) {
+		SqlSession session = factory.openSession();
+		int re= session.insert("review.defaultReview", r);
+		session.commit();
+		session.close();
+		return re;
+	}
+	
+	
 
 	
 	//==============================================
@@ -207,24 +246,18 @@ public class DBManager {
 		return re;
 	}
 	
-	public static HashMap findId(String cust_name, String cust_phone) {
+	public static String findId(HashMap map) {
 		SqlSession session = factory.openSession();
-		HashMap map = new HashMap();
-		map.put("cust_name", cust_name);
-		map.put("cust_phone", cust_phone);
-		session.selectOne("customer.findId",map);
+		String cust_id = session.selectOne("customer.findId",map);
 		session.close();
-		return map;
+		return cust_id;
 	}
 	
-	public static HashMap findPwd(String cust_id, String cust_phone) {
+	public static String findPwd(HashMap map) {
 		SqlSession session = factory.openSession();
-		HashMap map = new HashMap();
-		map.put("cust_id", cust_id);
-		map.put("cust_phone", cust_phone);
-		session.selectOne("customer.findId",map);
+		String cust_pwd = session.selectOne("customer.findPwd",map);
 		session.close();
-		return map;
+		return cust_pwd;
 	}
 	
 	public static CustomerVO detailCustomer(String cust_id) {
@@ -249,11 +282,26 @@ public class DBManager {
 		return c;
 	}
 	
+
 	public static String getRole(String cust_id) {
 		SqlSession session = factory.openSession();
 		String role = session.selectOne("customer.getRole",cust_id);
 		session.close();
 		return role;
+	}
+	public static int mypageMain(String cust_id) {
+		SqlSession session = factory.openSession();
+		int re = session.selectOne("customer.mypage_login",cust_id);
+		session.close();
+		return re;
+
+	}
+	
+	public static String getEmail(String cust_id) {
+		SqlSession session = factory.openSession();
+		String email = session.selectOne("customer.getEmail",cust_id);
+		session.close();
+		return email;
 	}
 	
 	//===================================================
@@ -305,12 +353,18 @@ public class DBManager {
 		return re;
 	}
 	
-	public static int updateQna_answer(String qna_answer, int qna_no) {
+
+	public static List<ListQnaVO> findAllQna(int product_no){
 		SqlSession session = factory.openSession();
-		HashMap map = new HashMap();
-		map.put("qna_answer", qna_answer);
-		map.put("qna_no", qna_no);
-		int re=session.update("qna.update_answer",map);
+		List<ListQnaVO> list = session.selectList("qna.findAllQna", product_no);
+		session.close();
+		return list;
+	}
+	
+	public static int updateQna_answer(QnaVO q) {
+		SqlSession session = factory.openSession();
+		int re=session.update("qna.updateQna_answer",q);
+		session.commit();
 		session.close();
 		return re;
 	}
@@ -369,7 +423,20 @@ public class DBManager {
 		return re;
 	}
 	
-
+	public static int getOrder_count() {
+		SqlSession session = factory.openSession();
+		int re= session.selectOne("customer_order.getOrder_count");
+		session.close();
+		return re;
+	}
+	
+	public static int order_getNextNo() {
+		SqlSession session = factory.openSession();
+		int order_no = session.selectOne("customer_order.getNextNo");
+		session.close();
+		return order_no;
+	}
+	
 
 
 	
@@ -398,6 +465,13 @@ public class DBManager {
 		return re;
 	}
 	
+	public static int orderdetail_getNextNo() {
+		SqlSession session = factory.openSession();
+		int detail_no = session.selectOne("customerOrder_detail.getNextNo");
+		session.close();
+		return detail_no;
+	}
+	
 	//===========================================
 	//customerOrder_refund
 	
@@ -420,9 +494,9 @@ public class DBManager {
 		return re;
 	}
 	
-	public static List<CartProductVO> cartProduct(){
+	public static List<CartProductVO> cartProduct(String cust_id){
 		SqlSession session = factory.openSession();
-		List<CartProductVO> list= session.selectList("cart.cartProduct");
+		List<CartProductVO> list= session.selectList("cart.cartProduct",cust_id);
 		session.close();
 		return list;
 	}
@@ -451,7 +525,22 @@ public class DBManager {
 		return cp;
 	}
 	
+	public static int cartGetNextNo() {
+		SqlSession session = factory.openSession();
+		int re = session.selectOne("cart.cartGetNextNo");
+		session.close();
+		return re;
+	}
 	
+	public static int findByProduct(String cust_id,int product_no) {
+		SqlSession session = factory.openSession();
+		HashMap map = new HashMap();
+		map.put("cust_id",cust_id);
+		map.put("product_no",product_no);
+		int re = session.selectOne("cart.findByProduct",map );
+		session.close();
+		return re;
+	}
 	
 
 	
