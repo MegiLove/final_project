@@ -1,0 +1,103 @@
+.hd_footer{
+	font-size: 15px;
+}
+
+.hd_footer{
+	background: #F9F9F9;
+	padding-top: 30px;
+	height: 200px;
+}
+
+.hd_footer_inner{
+	width: 1100px;
+	margin: 0 auto;
+}
+
+.hd_footer_left{
+	float: left;
+	width: 490px;
+}
+
+.hd_footer_left ul{
+	margin: 0;
+	padding: 0;
+}
+
+.hd_footer_left .item li{
+	display: inline-block;
+	position: relative;
+	margin-left: 15px;
+	padding-left: 15px;
+	vertical-align: top;
+	line-height: 24px;
+}
+
+.hd_footer_left .item li:first-child{
+	margin-left: 0;
+	padding-left: 0;
+}
+
+.hd_footer_left .item li:first-child:before{
+	display: none;
+}
+
+.hd_footer_left .item li:before{
+	display: block;
+	position: absolute;
+	top: 4px;
+	left: 0;
+	width: 1px;
+	height: 18px;
+	font-size: 18px;
+	background: #ccc;
+	content: "";
+}
+
+.hd_footer_left .service{
+	margin: 34px 0 32px;
+}
+
+.hd_footer_left .service_title{
+	font-weight: 600;
+}
+
+.hd_footer_left .service_tel{
+	display: block;
+	font-size: 20px;
+	font-weight: 600;
+	color: #F26835;
+}
+
+.hd_footer_left .service_desc{
+	color: #888;
+}
+
+.hd_footer_right{
+	position: relative;
+	float: right;
+	width: 610px;
+}
+
+.hd_footer_right .company{
+	margin: 60px 0 10px;
+	letter-spacing: -0.03em;
+}
+
+.hd_footer_right .copyright{
+	font-size: 14px;
+	color: #aaa;
+}
+
+.hd_footer_right em{
+	font-style: normal;
+}
+
+.hd_footer_right .company_name{
+	display: block;
+	margin-bottom: 10px;
+	font-weight: 600;
+}
+
+.hd_footer_right .company_info{
+	color: #888;
+}

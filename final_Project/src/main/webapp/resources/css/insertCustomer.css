@@ -1,13 +1,21 @@
 * {
 font-family: 'Noto Sans KR', sans-serif;
+box-sizing: content-box;
 } 
 
-.join_form{
+/* .join_form{
 	margin-left: auto;
 	margin-right: auto;
 	width: 700px;
 	padding: 20px 0;
-}
+} */
+.join_form{
+	width: 1000px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+} 
 
 #join_title{
 	width: 580px;
@@ -20,16 +28,9 @@ font-family: 'Noto Sans KR', sans-serif;
 }
 #join_essential{
 	position: relative;
-	text-align: right;
-	margin-right: 450px;
-}
-.join_form{
-	width: 1000px;
-	height: 100%;
-	margin: 25px auto 100px;
-	border-radius: 3px;
-	padding: 50px 50px;
-	
+ 	text-align: right;
+	margin-left: 1000px;
+	margin-right: 250px;	
 }
 .join_tag{
 	margin-bottom: 50px;
@@ -70,7 +71,7 @@ input {
 	margin-bottom: 20px;	
 }
 #cust_addr3, #address{
-	margin-left: 330px;	
+	margin-left: 335px;	
 }
 
 .btnCheck{
@@ -100,8 +101,6 @@ input {
 .join_name{
 	margin-left: 180px;
 }
-
-
 
 
 

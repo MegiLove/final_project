@@ -5,29 +5,49 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import org.springframework.web.servlet.ModelAndView;
+
 import org.springframework.web.bind.annotation.ResponseBody;
+
 
 import com.example.demo.dao.CartDAO;
 import com.example.demo.dao.CustomerDAO;
 import com.example.demo.dao.CustomerOrder_detailDAO;
+import com.example.demo.dao.CustomerOrder_refundDAO;
 import com.example.demo.dao.Customer_orderDAO;
+
+import com.example.demo.vo.CustomerOrder_refundVO;
+
 import com.example.demo.dao.ReviewDAO;
 import com.example.demo.vo.CartVO;
 import com.example.demo.vo.CustomerOrder_detailVO;
+
 import com.example.demo.vo.CustomerVO;
 import com.example.demo.vo.Customer_orderVO;
 import com.example.demo.vo.ListDetailVO;
+
+import com.example.demo.vo.MonthTotalVO;
+import com.example.demo.vo.OrderCancelVO;
+
 import com.example.demo.vo.OrderCommitVO;
 import com.example.demo.vo.ReviewVO;
 import com.google.gson.Gson;
-
 
 import lombok.Setter;
 
@@ -47,6 +67,9 @@ public class Customer_orderController {
 	@Autowired
 	private CustomerOrder_detailDAO codDAO;
 	
+	@Autowired
+	private CustomerOrder_refundDAO rDAO;
+
 	@Autowired
 	private ReviewDAO reDAO;
 	
@@ -70,10 +93,47 @@ public class Customer_orderController {
 		model.addAttribute("totalDetail",codDAO.totalDetail(order_no));
 		ListDetailVO ld = new ListDetailVO();
 	}
-
+	
+	@RequestMapping(value = "/mypage/orderCancelPage", method = RequestMethod.GET)
+	public void orderCancelPage(Model model,int order_no) {
+		List<OrderCancelVO> list = dao.orderCancelPage(order_no);
+//		System.out.println("주문상세내역:"+list);
+		model.addAttribute("list",list);
+		model.addAttribute("o",list.get(0));
+		
+		model.addAttribute("totalDetail",codDAO.totalDetail(order_no));
+	}
+	
+	@RequestMapping(value = "/mypage/orderCancelPage", method = RequestMethod.POST)
+	public ModelAndView orderCancelPage_submit(Model model, int order_no, int refund_code) {
+		ModelAndView mav = new ModelAndView();
+		int refund_no = rDAO.refund_getNextNo();
+		CustomerOrder_refundVO vo = new CustomerOrder_refundVO(refund_no, order_no, refund_code);
+		int re = rDAO.insertRefund(vo);
+		//int re = rDAO.insertRefund(cr);
+		
+		if(re == 1) {
+			dao.orderCancelCheck(order_no);
+			mav.setViewName("redirect:/mypage/orderList");
+		}else {
+			mav.addObject("msg", "주문취소에 실패하였습니다.");
+			mav.setViewName("/common/error");
+		}
+		return mav;
+	}
+	
+	
+	
+	@GetMapping(value="/admin/monthTotal")
+	@ResponseBody
+	public  List<MonthTotalVO> monthTotal(){		
+	 return   dao.monthTotal();//월별 매출액
+	
+	}
+	
 	@RequestMapping(value = "/market/orderRequest", method = RequestMethod.POST)
 	@ResponseBody
-	public void insertCustomer_order(HttpServletRequest request, HttpServletResponse response) {
+	public ModelAndView insertCustomer_order(ModelAndView mv, HttpServletRequest request, HttpServletResponse response) {
 		Gson gson = new Gson();
 		
 		
@@ -137,6 +197,10 @@ public class Customer_orderController {
 		}catch (Exception e) {
 			System.out.println("예외발생:"+e.getMessage());
 		}
+		
+		mv.setViewName("market/orderPageOK");
+		mv.addObject("order_no", order_no);
+		return mv;
 
 
 		
@@ -154,6 +218,14 @@ public class Customer_orderController {
 	}
 
 	
-
 	
 }
+	
+	
+	
+	
+	
+	
+	
+	
+	

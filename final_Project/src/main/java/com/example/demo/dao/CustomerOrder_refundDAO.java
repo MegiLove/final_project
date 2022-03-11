@@ -11,4 +11,8 @@ public class CustomerOrder_refundDAO {
 	public int insertRefund(CustomerOrder_refundVO cr) {
 		return DBManager.insertRefund(cr);
 	}
+	
+	public int refund_getNextNo() {
+		return DBManager.refund_getNextNo();
+	}
 }

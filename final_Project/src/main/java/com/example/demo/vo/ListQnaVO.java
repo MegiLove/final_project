@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class ListQnaVO {
+	private int qna_no;
 	private String qna_title;
 	private String qna_content;
 	private String qna_img;

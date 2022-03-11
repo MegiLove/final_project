@@ -18,9 +18,29 @@
   <select id="getNextNo" resultType="java.lang.Integer">
   	select nvl(max(qna_no),0)+1 from qna
   </select>
-  
+
   <select id="listQna" resultType="qnaVO">
-	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d, customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no and o.cust_id=#{cust_id} order by q.qna_date desc
+<!-- 	select qna_no, detail_no, qna_title, qna_date from 
+	(select rownum num, qna_no, detail_no, qna_title, qna_date from 
+	(select q.qna_no, d.detail_no, q.qna_title, q.qna_date from 
+	qna q, customerOrder_detail d, customer_order o  
+	where q.detail_no=d.detail_no and o.order_no=d.order_no 
+	and o.cust_id=#{cust_id} 
+	order by q.qna_date desc)) 
+	where num between #{start} and #{end} -->
+	
+	select qna_no, detail_no, qna_title, qna_date, cust_id from 
+	(select rownum num, qna_no, detail_no, qna_title, qna_date,cust_id from 
+	(select q.qna_no, d.detail_no, q.qna_title, q.qna_date, o.cust_id from 
+	qna q, customerOrder_detail d, customer_order o  
+	where q.detail_no=d.detail_no and o.order_no=d.order_no 
+	and o.cust_id=#{cust_id}
+	order by q.qna_date desc)) 
+	where cust_id = #{cust_id} and num between #{start} and #{end}
+  </select>
+  
+  <select id="QnaGetTotalRecord" resultType="java.lang.Integer">
+  	select count(*) from Qna
   </select>
   
   <insert id="insertQna" parameterType="qnaVO">
@@ -28,16 +48,22 @@
   </insert>
  
   <select id="findAllQna" resultType="listQnaVO">
-  	select qna_title,qna_content,qna_img,qna_answer,qna_date,cust_id from qna q,customerorder_detail d,customer_order o 
+  	select qna_no,qna_title,qna_content,qna_img,qna_answer,qna_date,cust_id from qna q,customerorder_detail d,customer_order o 
 	where q.detail_no = d.detail_no and d.order_no = o.order_no and product_no=#{product_no} order by qna_date desc
   </select>
 
    <update id="updateQna_answer" parameterType="qnaVO">
-  update qna set qna_answer=#{qna_answer} where qna_no=#{qna_no}
+ 	 update qna set qna_answer=#{qna_answer} where qna_no=#{qna_no}
   </update>
   
    <select id="mgr_listQna" resultType="qnaVO">
-	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d,  customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no
+	select qna_no, detail_no, qna_title, qna_date from 
+	(select rownum num, qna_no, detail_no, qna_title, qna_date from 
+	(select q.qna_no, d.detail_no, q.qna_title, q.qna_date from 
+	qna q, customerOrder_detail d, customer_order o  
+	where q.detail_no=d.detail_no and o.order_no=d.order_no  
+	order by q.qna_date desc)) 
+	where num between #{start} and #{end}
   </select>
   
    <select id="mgr_detailQna" resultType="qnaVO">

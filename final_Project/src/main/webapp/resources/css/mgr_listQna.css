@@ -1,0 +1,30 @@
+ .mgr_list{
+	width: 1000px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+} 
+
+ table,tr,td{
+ 	margin-left: auto;
+    margin-right: auto;
+  	border-collapse:collapse;
+    text-align: center;
+    border: 0.5px solid gray;
+  }
+  
+  .pagenation{
+	float: left;
+	width: 100%;
+	text-align: center;
+	margin-top: 10px;
+	display: inline-block;
+}
+
+#qna_name{
+	width: 700px;
+	height: 30px;
+	background-color: rgb(242, 230, 208);
+	padding-top: 8px;
+}

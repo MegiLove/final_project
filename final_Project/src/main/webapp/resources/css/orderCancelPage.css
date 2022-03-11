@@ -1,0 +1,138 @@
+#oc_form{
+	/* margin-left: 200px; */
+	margin-top: 0px;
+} 
+#oc_title{
+ 	margin-bottom: 5px;
+/* 	margin-left: 150px; */
+}
+#oc_hr{
+	float: left;
+	width: 650px;
+/* 	margin-left: 50px; */
+	margin-bottom: 0px;
+}
+#oc_hr_date{
+	float: left;
+	width: 650px;
+	margin-bottom: 0px;
+}
+
+#oc_date{
+	text-align: center;
+	margin-right: 100px;
+}
+
+.oc_box{
+	display: inline-block;
+	height: 80px;
+}
+
+.oc_content{
+ 	margin-left: 20px; 
+	position: relative;
+	float: right;
+	width: 500px;
+	margin-top: 15px;
+	font-size: 15px;
+	line-height: 25px;
+}
+#oc_img{
+	float: left;
+}
+#oc_cnt{
+	font-size: 13px;
+	color: #939393;
+}
+#oc_ship_container{
+	width: 650px;
+}
+#oc_ship_name{
+	width: 650px;
+	height: 30px;
+	background-color: rgb(242, 230, 208);
+}
+#oc_hr_name{
+	margin-top: 0px;
+}
+#oc_hr_info{
+	margin-top: 0px;
+}
+#cust_name{
+	margin-left: 20px;
+}
+#img{
+	margin-top: 10px;
+	margin-left: 20px;
+}
+#oc_select{
+	border: 1px solid #808080;
+	width: 650px;
+	height: 60px;
+}
+#oc_select_box{
+	margin-top: 15px;
+	margin-left: 10px;
+}
+#oc_refund{
+	display: inline-block;
+	height: 150px;
+	width: 650px;
+	border: 1px solid #808080;
+}
+#oc_refund_name{
+	float: left;
+	width: 250px;
+	margin-left: 20px;
+	margin-top: 20px;
+}
+#oc_payment_name{
+	float: right;
+}
+/* #oc_refund_payment{
+	width: 325px;
+} */
+#oc_refund_price{
+	position: relative;
+	float: right;
+	width: 325px;
+	height: 150px;
+	font-size: 15px;
+	line-height: 25px;
+	background-color: rgb(242, 230, 208);
+}
+#oc_price_content{
+	margin-top: 20px;	
+	margin-left: 20px;
+}
+.oc_totalDetail{
+	float: right;
+	margin-right: 20px;
+}
+#oc_refund_hr{
+	margin-top: 50px;
+}
+.oc_btn{
+	margin-top:50px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 14px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+	width: 100px;
+	height: 30px;
+}
+#btn_reset{
+	margin-left: 230px;
+}
+#btn_submit{
+	margin-left: 20px;
+}
+
+
+
+
+
+

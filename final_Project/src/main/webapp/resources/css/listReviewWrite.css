@@ -1,0 +1,91 @@
+.head_article {
+    height: 60px;
+}
+
+.tab_menu{
+	overflow: hidden;
+	margin-top: 0px;
+    padding-left: 0px;
+    margin-bottom: 0px;
+}
+
+.tab_menu li{
+	float: left;
+	width: 400px;
+	height: 50px;
+	background-color: #fff;
+}
+
+.tab_menu_c a{
+	display: block;
+	border: 1px solid #dddfe1;
+	line-height: 44px;
+	text-align: center;
+}
+
+.tab_menu_w a{
+	display: block;
+	border: 1px solid #dddfe1;
+	line-height: 44px;
+	text-align: center;
+	border-bottom: 2px solid #F26835;
+	font-weight: 700;
+}
+
+#reviewBeforeList .list_before{
+	margin-top: 0;
+	padding-left: 0;
+}
+
+.list_before .no_before{
+	padding-top: 20px;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 700;
+}
+
+.list_before .goods_before{
+	position: relative;
+	margin-top: 10px;
+	padding: 0 20px;
+	border: 1px solid #dddfe1;
+}
+
+.goods_info{
+	overflow: hidden;
+	padding: 14px 0 20px;
+}
+
+.goods_info img{
+	float: left;
+	margin-right: 20px;
+}
+
+.goods_name{
+	float: left;
+	padding-right: 15px;
+	line-height: 40px;
+}
+
+.btn_write{
+	display: table;
+	position: absolute;
+	right: 20px;
+	bottom: 0;
+	height: 114px;
+}
+
+.inner_btn{
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.btn_write .inner_btn a{
+	display: block;
+	width: 100px;
+	background-color: #F2884B;
+	color: white;
+	line-height: 35px;
+	text-align: center;
+	border-radius: 2px;
+}

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.db.DBManager;
+import com.example.demo.vo.MarginProductVO;
 import com.example.demo.vo.ProductVO;
 
 @Repository
@@ -32,6 +33,14 @@ public class ProductDAO {
 	
 	public ProductVO detailProduct(int product_no) {
 		return DBManager.detailProduct(product_no);
+	}
+	
+	public List<ProductVO> bestProduct() {
+		return DBManager.bestProduct();
+	}
+	
+	public List<MarginProductVO> marginProduct(){
+		return DBManager.marginProduct();
 	}
 	
 	public List<ProductVO> mgr_listProduct(HashMap map){

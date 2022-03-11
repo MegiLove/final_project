@@ -1,0 +1,29 @@
+.admin_list{
+	width: 1100px;
+	height: 100%;
+	margin: 25px auto 300px;
+	border-radius: 3px;
+	padding: 50px 50px;
+}
+
+.box{
+	float:left;
+}
+
+#box1{
+	margin-right: 100px;
+}
+
+#box2{
+	margin-right: 100px;
+}
+
+#box3{
+	margin-right: 100px;
+}
+
+
+.return{
+	float:right;
+	margin-top: 70px;
+}

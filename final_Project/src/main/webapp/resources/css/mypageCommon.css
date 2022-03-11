@@ -1,11 +1,33 @@
+.page_section{
+	float: right;
+	width: 800px;
+}
+
+.page_article:after{
+	content: "";
+    display: block;
+    overflow: hidden;
+    width: 100%;
+    clear: both;
+}
+
+.head_article{
+	height: 70px;
+}
+
 .page_article{
 	width: 1050px;
-	margin: 0 auto;
+	margin: 0 auto 300px auto;
 }
 
 #snb{
 	float: left;
 	width: 200px;
+	margin-top: 25px;
+}
+
+.tit_snb{
+	margin-top: 0px;
 }
 
 #snb .tit_snb{

@@ -8,9 +8,11 @@
 <script type="text/javascript"
 	src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/category_sale.css" type="text/css">
 </head>
 <body>
-
+<div><jsp:include page="../common/header.jsp"></jsp:include></div>
+	<div class="cate">
       <h1>카테고리별 판매량</h1>
       <select id="category_code">
         <option value="sp">국, 찌개</option>
@@ -22,11 +24,6 @@
         <option value="v">비건</option>
       </select>
       <input type="submit" value="확인" onclick='Show_Category();'><br>
-      
-      <div id="cate_list">
-      
-      </div>
-
     
     <script>
     	function Show_Category(category_code) {
@@ -51,25 +48,22 @@
     	console.log(obj);
     	if (obj != null) {
     		console.log("callback success");
+    		document.getElementById("cate_list").innerHTML="";
     		for (var index = 0; index < count; index++) {
     			obj[index].product_no;
     			obj[index].product_name;
     			
     			var data = new Object();
-    			data.product_no= obj[index].product_no;
-    			data.product_name= obj[index].product_name;
-    			
-    			document.body.append(data.product_no); 
-    			document.body.append(data.product_name); 
+    			data.product_name= obj[index].product_name;    			
+    			//document.body.append(data.product_name);
+    			document.getElementById("cate_list").innerHTML+="<br/><br/>"+(index+1)+"위: "+data.product_name;
     		}
     	}
     }
-    </script>
+    </script>  
     
-    
-
-
-    
-    
+    <div id="cate_list"></div> 
+    </div>     
+    <div><jsp:include page="../common/footer.jsp"></jsp:include></div>
 </body>
 </html>

@@ -51,8 +51,8 @@ public class CustomerDAO {
 		return DBManager.getRole(cust_id);
 	}
 
-	public int mypage_login(String cust_id) {
-		return DBManager.mypageMain(cust_id);
+	public int mypage_login(HashMap map) {
+		return DBManager.mypageMain(map);
 	}
 	
 	public String getEmail(String cust_id) {

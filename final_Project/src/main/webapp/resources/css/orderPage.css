@@ -1,0 +1,78 @@
+ .join_form{
+	width: 1000px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+} 
+ 
+ 
+ table,tr,td{
+  	margin-left: auto;
+    margin-right: auto;
+  	border-collapse:collapse;
+    text-align: center;
+    border: 0.5px solid gray;
+  }
+  
+  .order{
+	margin-bottom: 50px;
+}
+  
+ .order_form{
+	margin-bottom: 30px;
+	outline: none;
+}
+
+input {
+  margin-bottom: 10px;
+}
+
+#btnCheck{
+	background-color: white;
+	border-radius: 3px;
+	color: #F2884B;
+	margin-left: 5px;
+	font-size: 15px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+}
+
+#btnOrder{
+	width: 150px; 
+	height: 50px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 21px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+	margin: auto;
+	display: block;
+}
+
+.order_1{
+	width: 580px;
+	color: #F2884B;
+	height: 30px;
+	margin:0 auto;
+	margin-bottom:50px;
+	margin-top:50px;
+	text-align: center;
+	
+}
+
+#order_name{
+margin-left: 70px;	
+	
+}
+
+#order_phone{
+margin-left: 20px;		
+}
+
+input[type=checkbox] {
+transform : scale(1.2);
+}

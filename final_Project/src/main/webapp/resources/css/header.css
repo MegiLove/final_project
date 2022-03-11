@@ -2,7 +2,7 @@
 	position: relative;
 	width: 100%;
 	min-width: 1200px;
-	min-height: 160px;
+	min-height: 125px;
 }
 
 section{
@@ -13,6 +13,11 @@ section{
 	width: 1100px;
 	margin: 0 auto;
 	text-align: right;
+}
+
+#user-area .list-menu{
+	margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 #user-area .list-menu > li{
@@ -46,6 +51,8 @@ section{
 	width: 100%;
 	text-align: center;
 	font-size: 0;
+	position: absolute;
+    bottom: 2px;
 }
 
 #header .logo a{
@@ -61,6 +68,7 @@ section{
 	width: 1100px;
 	height: 56px;
 	margin: 0 auto;
+	top: 50px;
 }
 
 #header .nb_list{
@@ -81,15 +89,25 @@ section{
 	font-weight: 600;
 }
 
+#header .menu3{
+	float: right;
+	width: 124px;
+	height: 55px;
+	color: #333;
+	line-height: 25px;
+	text-align: center;
+	font-weight: 600;
+}
+
 #sub-menu{
-	/* visibility: hidden; */
 	position: absolute;
 	transition: all 0.15s ease-in;
 	border: 1px solid #ccc;
 	margin-left: 15px;
-    margin-top: 15px;
+    margin-top: 10px;
     background: #fff;
     display: none;
+    z-index: 2;
 }
 
 #sub-menu > ul{
@@ -104,4 +122,21 @@ section{
 
 #header .nb_list > li:hover #sub-menu{
 	display: block;
+}
+
+.nb .cart_inner{
+	position: absolute;
+	right: 5px;
+}
+
+.nb .cart_inner .cart_show{
+	display: block;
+	border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.nb .cart_inner .cart_show img{
+	width: 30px;
+	height: 30px;
 }

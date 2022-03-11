@@ -12,9 +12,187 @@
 	margin: auto;
 }
 
-.image_wrap img{
-	max-width: 85%;
-	height: auto;
+.best-sect{
+	margin-top: 100px;
+}
+
+.b-post-slider{
+	width: 1300px;
+	margin: 0px auto;
+	position: relative;
+}
+
+.b-post-slider .btn-b img{
+	width: 20px;
+	height: 20px;
+}
+
+.b-post-slider .b-slider-title{
+	text-align: center;
+	margin: 30px auto;
+}
+
+.b-post-slider .next{
+	position: absolute;
+	top: 50%;
+	right: 30px;
+	cursor: pointer;
+	border: 0px;
+	background: white;
+}
+
+.b-post-slider .prev{
+	position: absolute;
+	top: 50%;
+	left: 30px;
+	cursor: pointer;
+	border: 0px;
+	background: white;
+}
+
+.b-post-slider .b-post-wrapper{
+	width: 90%;
+	margin: 0px auto;
+ 	overflow: hidden; 
+	padding: 10px 0px 10px 0px;
+}
+
+.b-post-slider .b-post-wrapper .post{
+	margin: 0px 15px;
+	display: inline-block;
+	background: white;
+}
+
+.b-post-slider .b-post-wrapper .post .slick-slide{
+	width: 300px;
+}
+
+.b-post-slider .b-post-wrapper .post .post-info{
+	height: 30%;
+	padding-left: 10px;
+}
+
+.b-post-slider .b-post-wrapper .post .post-desc{
+	font-size: 14px;
+	margin-top: 7px;
+}
+
+.b-post-slider .b-post-wrapper .post .post-info h3{
+	margin-top: 0;
+	margin-bottom: 5px;
+}
+
+.b-post-slider .b-post-wrapper .post .post-price{
+	font-size: 22px;
+	font-weight: 700;
+}
+
+.event-sect{
+	margin-top: 150px;
+	margin-bottom: 150px;
+}
+
+.event-sect .post-event{
+	width: 1140px;
+	margin: 40px auto;
+}
+
+.event-sect .post-event img{
+	width: 100%;
+	height: 100%;
+}
+
+.discount-sect{
+	margin-bottom: 100px;
+}
+
+.m-post-slider{
+	width: 1300px;
+	margin: 0 auto;
+}
+
+.m-post-slider .m-slider-right{
+	margin-top: 150px;
+	width: 600px;
+	float: left;
+}
+
+.m-post-slider .m-slider-right .m-slider-title{
+	text-align: center;
+	margin: 0 auto;
+}
+
+.m-post-slider .m-slider-right > div{
+	text-align: center;
+    margin: 5px auto;
+}
+
+.m-post-slider .m-slider-left{
+	width: 700px;
+	display: inline-block;
+}
+
+.m-post-slider .post-img{
+	position: relative;
+	margin: 0;
+}
+
+.m-post-slider .post-img img{
+	width: 200px;
+}
+
+.m-post-slider .m-slider-left .m-post-wrapper .post-list{
+	margin: 0 0 18px 0;
+	position: relative;
+	width: 100%;
+	display: inline-block;
+}
+
+.m-post-wrapper .post-list .post-title-wrap{
+	position: absolute;
+	left: 220px;
+	top: 0;
+	margin-top: 15px;
+}
+
+.m-post-wrapper .post-list .post-desc{
+	font-size: 15px;
 	display: block;
-	margin: auto;
+	height: 24px;
+	line-height: 24px;
+}
+
+.m-post-wrapper .post-list .post-title{
+	font-size: 20px;
+	line-height: 1.3;
+	font-weight: 600;
+}
+
+.m-post-wrapper .post-list .post-price{
+	position: absolute;
+	left: 220px;
+	top: 105px;
+	display: block;
+	margin-top: 5px;
+}
+
+.m-post-wrapper .post-list .post-price-discounted-rate{
+	display: inline-block;
+	margin-right: 5px;
+	font-size: 16px;
+	font-weight: 600;
+	color: #F26835;
+}
+
+.m-post-wrapper .post-list .post-price-origin{
+	display: inline-block;
+	font-size: 16px;
+	color: #888;
+}
+
+.m-post-wrapper .post-list .post-price-discounted{
+	padding-top: 0;
+	display: block;
+	font-size: 22px;
+	font-weight: 600;
 }

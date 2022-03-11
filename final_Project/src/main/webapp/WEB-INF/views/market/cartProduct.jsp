@@ -9,10 +9,13 @@
 <title>Insert title here</title>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/cartProduct.css" type="text/css">
 </head>
 <body>
-	<h2>장바구니</h2>
-	<hr>
+	<div><jsp:include page="../common/header.jsp"></jsp:include></div>
+	<div class="cart_form">
+	<h2 id="cp_title">장바구니</h2>
+	<hr width="1100px">
 	<form name="checkBoxForm">
 	<table border="1" width="80%">
 		<c:forEach var="cp" items="${list }" varStatus="loop">
@@ -33,21 +36,22 @@
 				<input type="text" name="product_cnt" value="${cp.product_cnt}">
 				</td>
 				<td><c:set var="result" value="${cp.product_price*cp.product_cnt}"/>${result}원</td>
-				<td><br><button type="button" onclick="javascript:CartUpdate(product_cnt,product_no, cart_no, cust_id, ${loop.index})">변경</button>&emsp;</td>
-				<td><br><button type="button" onclick="javascript:CartDelete(cart_no, ${loop.index})">삭제</button>&emsp;</td>				
+				<td><br><button id="cp_update" type="button" onclick="javascript:CartUpdate(product_cnt,product_no, cart_no, cust_id, ${loop.index})">변경</button>&emsp;</td>
+				<td><br><button id="cp_delete" type="button" onclick="javascript:CartDelete(cart_no, ${loop.index})">삭제</button>&emsp;</td>				
 			</tr>		
 		</c:forEach>
 			<tr>
 				<td colspan=7 style="text-align:right;">총 상품 금액 : <input name="total_sum" type="text" size="20" value="0" readonly>원</td>
 			</tr>
-			
 			<tr align="center">
-				<td colspan=7><button type="button" onclick="javascript:CheckOrder(checkBoxForm)">선택 상품 주문</button>
-				&emsp;<button type="button" onclick="javascript:AllOrder(checkBoxForm);">전체 상품 주문</button></td>
-			</tr>			
+			
+				<td colspan=7><button type="button" id="cp_select" onclick="javascript:CheckOrder(checkBoxForm)">선택 상품 주문</button>
+				&emsp;<button type="button" id="cp_all" onclick="javascript:AllOrder(checkBoxForm);">전체 상품 주문</button></td>
+			</tr>		
 	</table>
 	</form>
-	
+	</div>
+	<div><jsp:include page="../common/footer.jsp"></jsp:include></div>
 	<script src="${pageContext.request.contextPath}/resources/js/cart.js"></script>	
 	
 </body>

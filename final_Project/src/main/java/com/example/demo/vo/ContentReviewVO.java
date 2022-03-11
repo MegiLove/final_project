@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ContentReviewVO {
+	private int order_no;
 	private int review_no;
 	private String product_name;
 	private String product_img;

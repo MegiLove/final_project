@@ -1,0 +1,125 @@
+#qna_head{
+	/* margin-left: 200px; */
+}
+#qna_box{
+	border-top: 2px solid black;
+	width: 650px;
+/* 	margin-left: 200px; */
+}
+
+table td{
+	border-bottom: 1px solid  #c0c0c0;
+}
+table th{
+	background-color: rgb(242, 230, 208);
+	border-bottom: 1px solid  rgb(242, 230, 208);
+}
+
+hr{
+	width: 650px;
+	margin: 0px;
+	padding: 0px;
+}
+.qna_name{
+	float:left;
+	margin-left: 20px;
+    text-align: left;
+   /*  padding: 15px; */
+   /*  background: #f7f5f8; */
+    vertical-align: middle;
+    
+}
+.qna_content{
+	/* float: left; */
+	text-align: center;
+	margin-right: 50px;
+
+
+}
+#qna_no{
+	height: 30px;
+}
+
+#qna_title{
+	height: 30px;
+}
+#order_no{
+	height: 30px;
+}
+#qna_content{
+	height: 210px;
+}
+#qna_img{
+	height: 110px;
+}
+#qna_tr_title{
+	height: 50px;
+}
+#qna_tr_no{
+	height: 50px;
+}
+.qna_link{
+	margin-left: 280px;
+	background-color: #F2884B;  
+	padding: 5px 20px; 
+	text-align: center; 
+	display: inline-block;
+	border-radius: 3px;
+}
+#qna_list{
+	margin-left: 10px;
+}
+textarea{
+	resize: none;
+}
+#q_qna_title{
+	margin-right: 45px;
+}
+#q_detail_no_{
+	margin-right: 285px;
+}
+#q_qna_content{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+#q_qna_img{
+	margin-top: 10px;
+	margin-right: 150px;
+	margin-bottom: 10px;
+}
+
+.insert{
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 14px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+	width: 100px;
+	height: 30px;
+}
+#q_detail_no_update{
+	float: left;
+	margin-left: 75px;
+}
+#update{
+	margin-top: 20px;
+	float: right;
+	margin-right: 150px;
+}
+#delete{
+	font-size: 14px;
+	float: left;
+	background-color: #F2884B; 
+	color: white; 
+	padding: 4px 30px; 
+	text-align: center; 
+	border-radius: 3px;
+/* 	margin-left: 20px; */
+	margin-top: 20px;
+}
+
+
+
+

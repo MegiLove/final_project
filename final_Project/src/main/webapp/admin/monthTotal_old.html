@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script type="text/javascript">
+/*    var arr = [
+       ["Element", "Density", { role: "style" } ],
+       ["1", 247350, "#b87333"],
+       ["2",213400, "silver"],
+       ["12", 60800, "gold"]
+     ]
+    */
+    var arr = [
+        ["Element", "Density", { role: "style" } ],
+        ["1", 247350, "#b87333"],
+        ["2",213400, "silver"],
+        ["12", 60800, "gold"]
+      ]
+    
+
+   
+/* {"rows":
+	[{"c":[
+		{"month":1},
+		{"price":247350}]},
+	  {"c":[{"month":2},{"price":213400}]},
+	  {"c":[{"month":12},{"price":60800}]}],
+"cols":
+	[{"label":"월","type":"number"},
+	{"label":"금액","type":"number"}]}
+ */
+   
+   
+   
+   $(function () {
+	$.ajax({
+		url:"/admin/monthTotal",
+		success:function(data){
+			console.log(data);
+		}
+	});
+});
+  
+    google.charts.load("current", {packages:['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable(arr);
+
+      var view = new google.visualization.DataView(data);
+      view.setColumns([0, 1,
+                       { calc: "stringify",
+                         sourceColumn: 1,
+                         type: "string",
+                         role: "annotation" },
+                       2]);
+
+      var options = {
+        title: "Density of Precious Metals, in g/cm^3",
+        width: 600,
+        height: 400,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.ColumnChart(document.getElementById("columnchart_values"));
+      chart.draw(view, options);
+  }
+  </script>
+
+</head>
+<body>
+	<div id="columnchart_values" style="width: 900px; height: 300px;"></div>
+	이게 열립니까
+</body>
+</html>

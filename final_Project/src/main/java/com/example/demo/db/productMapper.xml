@@ -4,9 +4,9 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="product">
   <select id="listProduct" resultType="productVO">
-    select product_no,product_img,product_name,product_price from 
-    (select rownum num,product_no,product_img,product_name,product_price from 
-    (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} 
+    select product_no,product_img,product_name,product_price,product_desc from 
+    (select rownum num,product_no,product_img,product_name,product_price,product_desc from 
+    (select product_no,product_img,product_name,product_price,product_desc from product where category_code=#{category_code} 
     <if test="orderType != null">
         order by ${orderType} 
     </if>
@@ -22,8 +22,8 @@
   </select>
   
   <select id="recentProduct" resultType="productVO">
-  	select product_no,product_img,product_name,product_price from 
-  	(select product_no,product_img,product_name,product_price from product order by product_date desc) where rownum &lt;= 30 
+  	select product_no,product_img,product_name,product_price,product_desc from 
+  	(select product_no,product_img,product_name,product_price,product_desc from product order by product_date desc) where rownum &lt;= 30 
   	<if test="orderType != null">
   		order by ${orderType}
   	</if>
@@ -32,6 +32,15 @@
   <select id="detailProduct" resultType="productVO">
   	select product_img,product_desc,product_name,product_price,product_detail from product where product_no=#{product_no}
   </select>    
+  
+  <select id="bestProduct" resultType="productVO">
+  	select * from (select p.product_no, product_img, product_name, product_price, product_desc, count(*) from product p, customerOrder_detail c 
+	where c.product_no=p.product_no group by p.product_no, product_img, product_name, product_price,product_desc order by count(*) desc) where rownum &lt;= 8
+  </select>
+  
+  <select id="marginProduct" resultType="marginProductVO">
+  	select product_no,product_img, product_name, product_price,product_desc from product where product_margin=1
+  </select>
   
   <!-- admin -->
   <select id="mgr_listProduct" resultType="productVO">
@@ -54,7 +63,7 @@
   </insert>
 
   <update id="mgr_updateProduct" parameterType="productVO">
-  update product set product_name=#{product_name},product_price = #{product_price},product_desc=#{product_desc}, product_margin=#{product_margin}, product_img=#{product_img}, product_detail=#{product_detail} where product_no=#{product_no}
+  update product set product_name=#{product_name},product_price = #{product_price},product_desc=#{product_desc}, product_margin=#{product_margin} where product_no=#{product_no}
   </update>
   
   <delete id="mgr_deleteProduct" parameterType="productVO">

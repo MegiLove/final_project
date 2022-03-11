@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -29,9 +31,25 @@ public class QnaController {
 	private QnaDAO dao;
 	
 	@RequestMapping("/mypage/listQna")
-	public void list(HttpSession session, Model model) {
-		CustomerVO member = (CustomerVO)session.getAttribute("member");
-		model.addAttribute("list",dao.listQna(member.getCust_id()));
+	public void list(HttpSession session, Model model,@RequestParam(defaultValue = "1") int pageNUM) {
+//		CustomerVO member = (CustomerVO)session.getAttribute("member");
+//		model.addAttribute("list",dao.listQna(member.getCust_id()));
+		String cust_id = (String)session.getAttribute("cust_id");
+		
+		
+		int start = (pageNUM-1)*dao.pageSIZE +1;
+		int end = start + dao.pageSIZE -1;
+		System.out.println("start:"+start);
+		System.out.println("end:"+end);
+		
+		HashMap map = new HashMap();
+		map.put("cust_id", cust_id);
+		map.put("start", start);
+		map.put("end",end);
+		
+		model.addAttribute("list",dao.listQna(map));
+		model.addAttribute("totalPage",dao.totalPage);
+		
 	}
 	
 	@RequestMapping("/mypage/detailQna")
@@ -61,7 +79,7 @@ public class QnaController {
 		}
 		int re = dao.insertQna(q);
 		if(re != 1) {
-			mav.setViewName("/common/error");
+			mav.setViewName("/error");
 			mav.addObject("msg","게시글 등록에 실패하였습니다");
 		}else {//insert성공했으면
 			try {
@@ -166,8 +184,21 @@ public class QnaController {
 	}
 	
 	@RequestMapping("/admin/mgr_listQna")
-	public void list(Model model) {
-		model.addAttribute("list",dao.mgr_listQna());
+	public void list(Model model,@RequestParam(defaultValue = "1") int mgr_pageNUM) {
+		System.out.println("mgr_pageNUM:" + mgr_pageNUM);
+
+		int start = (mgr_pageNUM - 1) * dao.mgr_pageSIZE + 1;
+		int end = start + dao.mgr_pageSIZE - 1;
+		System.out.println("start:" + start);
+		System.out.println("end:" + end);
+
+		HashMap map = new HashMap();
+		
+		map.put("start", start);
+		map.put("end", end);
+		
+		model.addAttribute("list", dao.mgr_listQna(map));
+		model.addAttribute("mgr_totalPage", dao.mgr_totalPage);
 	}
 	
 	@RequestMapping("/admin/mgr_detailQna")

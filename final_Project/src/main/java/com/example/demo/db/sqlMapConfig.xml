@@ -21,6 +21,7 @@
   	<typeAlias type="com.example.demo.vo.ListDetailVO" alias="listDetailVO"/>
   	<typeAlias type="com.example.demo.vo.CartVO" alias="cartVO"/>
   	<typeAlias type="com.example.demo.vo.CartProductVO" alias="cartProductVO"/>
+  	<typeAlias type="com.example.demo.vo.MarginProductVO" alias="marginProductVO"/>
   </typeAliases>
   <environments default="development">
     <environment id="development">

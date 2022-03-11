@@ -1,0 +1,105 @@
+
+/* #hr{
+	text-align: left;
+} */
+.join_container{
+	/* margin-left: 100px; */
+	float: right;
+	width: 800px;
+}
+.join_form{
+	margin-left: 0px;
+	float: left;
+	border-top: 1px solid black;
+	padding-top: 30px;
+}
+#join_title{
+	/* margin-left: 170px; */
+	margin-bottom: 0px;
+}
+#join_essential{
+ 	text-align: right;
+	margin-right: 280px;
+	margin-bottom: 10px;	
+}
+.join_tag{
+	margin-bottom: 50px;
+}
+.join_8{
+	color: #F2884B;
+}
+.join_box{
+	margin-bottom: 30px;
+	outline: none;
+}
+
+#join_tag_id{
+	margin-left: 100px;
+}
+#join_tag_pwd{
+	margin-left: 85px;
+}
+#join_tag_pwdok{
+	margin-left: 58px;
+}
+#join_tag_name{
+	margin-left: 115px;
+}
+#join_tag_phone{
+	margin-left: 100px;
+}
+#join_tag_email{
+	margin-left: 100px;
+}
+#join_tag_addr{
+	margin-left: 113px;
+}
+input {
+  height:30px;
+}
+#cust_addr1, #address{
+	margin-bottom: 20px;	
+}
+#cust_addr3, #address{
+	margin-left: 155px;	
+}
+
+.btnCheck{
+	background-color: white;
+	border-radius: 3px;
+	color: #F2884B;
+	margin-left: 5px;
+	font-size: 15px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+}
+
+#join_submit{
+	margin-left: 155px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 18px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+}
+.result{
+	margin-left: 5px;
+}
+/* .join_name{
+	margin-left: 180px;
+} */
+/* #footer{
+	margin-top: 700px;
+}
+ */
+
+
+
+
+
+
+
+

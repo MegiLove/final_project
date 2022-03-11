@@ -8,6 +8,7 @@
 <title>Insert title here</title>
 </head>
 <body>
+	<div><jsp:include page="./common/header.jsp"></jsp:include></div>
 	${msg }
 
 	<a href="main">메인으로 가기</a><br>

@@ -9,7 +9,7 @@
   </select>
   
   <select id="listReviewComplete" resultType="contentReviewVO">
-  	select review_no,product_name, review_title, review_content, review_img from review r, customerOrder_detail d, product p,customer_order c 
+  	select c.order_no,review_no,product_name, review_title, review_content, review_img from review r, customerOrder_detail d, product p,customer_order c 
 	where c.order_no=d.order_no and d.detail_no=r.detail_no and d.product_no = p.product_no and review_code=1 and cust_id=#{cust_id} order by review_no desc
   </select>
   

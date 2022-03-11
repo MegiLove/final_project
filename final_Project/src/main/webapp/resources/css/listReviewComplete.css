@@ -1,0 +1,71 @@
+.head_article {
+    height: 60px;
+}
+
+.tab_menu{
+	overflow: hidden;
+	margin-top: 0px;
+    padding-left: 0px;
+    margin-bottom: 0px;
+}
+
+.tab_menu li{
+	float: left;
+	width: 400px;
+	height: 50px;
+	background-color: #fff;
+}
+
+.tab_menu_w a{
+	display: block;
+	border: 1px solid #dddfe1;
+	line-height: 44px;
+	text-align: center;
+}
+
+.tab_menu_c a{
+	display: block;
+	border: 1px solid #dddfe1;
+	line-height: 44px;
+	text-align: center;
+	border-bottom: 2px solid #F26835;
+	font-weight: 700;
+}
+
+#reviewAfterList .list_after{
+	margin: 0;
+    padding: 0;
+}
+
+#reviewAfterList .list_after li{
+	border-bottom: 2px solid #ddd;
+	margin-bottom: 10px;
+}
+
+#reviewAfterList .list_after .no_after{
+	padding: 25px 30px 5px;
+	border-bottom: 1px solid #dddfe1;
+}
+
+#reviewAfterList .list_after .no_after span{
+	font-weight: 700;
+    line-height: 24px;
+}
+
+#reviewAfterList .list_after .cont_after{
+	padding-bottom: 20px;
+}
+
+.list_after .cont_after a{
+	display: block;
+	overflow: hidden;
+	padding: 10px 30px 0;
+	font-size: 20px;
+    font-weight: 700;
+}
+
+.list_after .cont_after .name_after{
+	font-size: 14px;
+	overflow: hidden;
+	padding: 3px 30px 0;
+}

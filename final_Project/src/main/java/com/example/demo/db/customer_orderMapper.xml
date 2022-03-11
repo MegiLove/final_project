@@ -8,9 +8,11 @@
   </select>
   
   <select id="orderCancelPage" resultType="OrderCancelVO">
-  	select o.order_date, o.order_no, c.cust_name, p.product_img, d.detail_price, d.detail_cnt, pay.payment_code 
+  	select o.order_date, o.order_no, c.cust_name, p.product_img, p.product_name, d.detail_price, d.detail_cnt, pay.payment_name 
 	from customer_order o, customer c, product p, customerOrder_detail d, payment pay 
-	where c.cust_id=o.cust_id and p.product_no=d.product_no and d.order_no=o.order_no and o.payment_code=pay.payment_code and o.order_no=#{order_no} 
+	where c.cust_id=o.cust_id and p.product_no=d.product_no 
+	and d.order_no=o.order_no and o.payment_code=pay.payment_code 
+	and o.order_no=#{order_no}
   </select>
   
   <update id="orderCancelCheck" parameterType="java.lang.Integer">
@@ -18,7 +20,7 @@
   </update>
   
   <select id="monthTotal" resultType="monthTotalVO">
-	select month,sum(total) from (select substr(order_date,4,2) month,total from customer_order o,(select order_no,sum(detail_price*detail_cnt) total from customerorder_detail group by order_no) s where o.order_no = s.order_no)  group by month
+	select month,sum(total) total from (select substr(order_date,4,2) month,total from customer_order o,(select order_no,sum(detail_price*detail_cnt) total from customerorder_detail group by order_no) s where o.order_no = s.order_no)  group by month order by month
   </select>
   
    <insert id="insertCustomer_order" parameterType="customer_orderVO">

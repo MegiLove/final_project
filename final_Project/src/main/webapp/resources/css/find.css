@@ -1,0 +1,36 @@
+#find_title{
+	text-align: center;
+	margin-bottom: 50px;
+}
+#find_container{
+	margin-left: 600px;
+}
+#find_method{
+	text-align: center;
+}
+#find_submit{
+	margin-top: 30px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 14px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+	width: 310px;
+	height: 30px;	
+	margin-bottom: 50px;
+}
+.find_content{
+	width: 300px;
+	height: 30px;
+}
+#findOK_msg{
+	text-align: center;
+	margin-top: 50px;
+}
+#find_main{
+	margin-top: 50px;
+	text-align: center;
+	margin-bottom: 100px;
+}

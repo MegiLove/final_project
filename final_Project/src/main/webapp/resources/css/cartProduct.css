@@ -1,0 +1,109 @@
+.cart_form{
+	width: 1400px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+}
+
+.cp_form{
+	  margin-left: auto;
+      margin-right: auto;
+}
+
+#cp_update{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 17px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	float: right;
+	margin-bottom: 20px;
+	margin-left: 40px;
+    display:block;
+	text-decoration: none;
+	text-align: center;
+	font-weight: bold;
+}
+
+#cp_delete{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 17px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	float: right;
+	margin-bottom: 20px;
+	margin-right: 70px;
+    display:block;
+	text-decoration: none;
+	text-align: center;
+	font-weight: bold;
+}
+
+#cp_select{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 17px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	float: right;
+	margin-right: 20px;
+	text-decoration: none;
+	text-align: center;
+	font-weight: bold;
+	margin-top: 10px;
+}
+
+#cp_all{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 17px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	float: right;
+	margin-right: 20px;
+	text-decoration: none;
+	text-align: center;
+	font-weight: bold;
+	margin-top: 10px;
+}
+
+
+  table,td,tr {
+  	margin-left: auto;
+    margin-right: auto;
+    border-collapse:collapse;
+    border-right:none;
+	border-left:none;
+	border-top:none;
+	border-bottom:none;
+    text-align: center;
+  }
+  
+#cp_hr{
+	float: left;
+	width: 1500px;
+	margin-left: 150px;
+}
+
+#cp_title{
+	margin-bottom: 5px;
+	margin-left: 150px;
+}
+
+input{
+	width: 100px;
+}
+
+input[type=checkbox] {
+transform : scale(1.3);
+}

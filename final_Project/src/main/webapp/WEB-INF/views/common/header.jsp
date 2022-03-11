@@ -6,8 +6,20 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<link rel="stylesheet" href="../resources/css/header.css" type="text/css">
 <link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/header.css" type="text/css">
+<script type="text/javascript">
+	$(function(){
+		$(".cart_show").click(function(){
+			if(${empty sessionScope.cust_id}){
+				alert("로그인 한 회원만 가능합니다.");
+				return;
+			}else{
+				location.href = "/market/cartProduct";
+			}
+		});
+	});
+</script>
 </head>
 <body>
 	<div id="header">
@@ -17,8 +29,13 @@
 				<c:when test="${not empty member }">
 					<ul class="list-menu">
 						<li>${member.cust_name }보글님</li>
-						<li><a href="/mypage/listReviewWrite">마이페이지</a></li>
+
+						<c:if test="${cust_id eq 'bbox' }"> 
+               				 <li><a href="http://localhost:8080/admin/adminMain">관리자페이지</a><br></li>
+       				    </c:if>
+						<li><a href="/mypage/orderList">마이페이지</a></li>
 						<li><a href="/logout">로그아웃</a></li>
+
 					</ul>
 				</c:when>
 				<c:otherwise>
@@ -32,7 +49,7 @@
 		<div class="header_inner">
 			<div class="header_sec">
 				<h1 class="logo">
-					<a href="/main"><img src="/images/BoggleBox_logo.jpg" style="width: 130px; height: 70px;"></a>
+					<a href="/main"><img src="/images/BoggleBox_logo.jpg" style="width: 120px;"></a>
 				</h1>
 				<div class="nb">
 					<ul class="nb_list">
@@ -52,8 +69,10 @@
 						</li>
 						<li class="menu2"><a href="/market/recentProduct">신제품</a></li>
 					</ul>
+					<div class="cart_inner">
+						<button class="cart_show"><img src="/images/icon_cart.png"></button>
+					</div>
 				</div>
-				<div></div>
 			</div>
 		</div>
 	</div>

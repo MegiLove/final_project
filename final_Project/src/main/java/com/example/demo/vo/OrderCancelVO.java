@@ -15,8 +15,9 @@ public class OrderCancelVO {
 	private int order_no;	
 	private String cust_name;	
 	private String product_img;	
+	private String product_name;	
 	private int detail_price;	
 	private int detail_cnt;	
-	private int payment_code;	
+	private String payment_name;	
 
 }

@@ -65,17 +65,22 @@ const insertCart = () => {
 	
 }
 
-
 const changeColorBtn = () => {
 	for (var i = 0; i < 4; i++) {
-		$('.tap-button').eq(i).removeClass('btn-primary').addClass('btn-secondary');
+		$('.tap-change').eq(i).css({
+			'background-color':'#fafafa',
+			'color':'#666',
+			'border-bottom':'1px solid #eee'});
 	}		
 }
 
 
 const reviewTap = () => {
 	changeColorBtn();
-	$('#reviewButton').removeClass('btn-secondary').addClass('btn-primary');
+	$('#r_tap').css({
+			'background-color':'#fff',
+			'color':'#F26835',
+			'border-bottom':'0'});
 	$('.detail-wrap').css('display','none');
 	$('.qna-wrap').css('display','none');
 	$('.exchange-wrap').css('display','none');
@@ -85,7 +90,10 @@ const reviewTap = () => {
 
 const detailTap = () => {
 	changeColorBtn();
-	$('#detailButton').removeClass('btn-secondary').addClass('btn-primary');
+	$('#d_tap').css({
+			'background-color':'#fff',
+			'color':'#F26835',
+			'border-bottom':'0'});
 	$('.review-wrap').css('display','none');
 	$('.qna-wrap').css('display','none');
 	$('.exchange-wrap').css('display','none');
@@ -94,7 +102,10 @@ const detailTap = () => {
 
 const qnaTap = () => {
 	changeColorBtn();
-	$('#qnaButton').removeClass('btn-secondary').addClass('btn-primary');
+	$('#q_tap').css({
+			'background-color':'#fff',
+			'color':'#F26835',
+			'border-bottom':'0'});
 	$('.detail-wrap').css('display','none');
 	$('.review-wrap').css('display','none');
 	$('.exchange-wrap').css('display','none');
@@ -103,7 +114,10 @@ const qnaTap = () => {
 
 const exchangeTap = () => {
 	changeColorBtn();
-	$('#exchangeButton').removeClass('btn-secondary').addClass('btn-primary');
+	$('#e_tap').css({
+			'background-color':'#fff',
+			'color':'#F26835',
+			'border-bottom':'0'});
 	$('.detail-wrap').css('display','none');
 	$('.review-wrap').css('display','none');
 	$('.qna-wrap').css('display','none');

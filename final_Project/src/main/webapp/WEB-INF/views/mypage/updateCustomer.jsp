@@ -5,7 +5,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<link rel="stylesheet" href="../resources/css/insertCustomer.css" type="text/css">
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" href="../resources/css/updateCustomer.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/mypageCommon.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/footer.css" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
@@ -39,15 +43,32 @@ function passConfirm() {
 </script>
 </head>
 <body>
-<!-- 이름줄때 앞에 join_ 붙이기 -->
+
+<div id="container">
+		<div><jsp:include page="../common/header.jsp"></jsp:include></div>
+		<div class="page_article">
+		
+		
+			<div id="snb">
+				<h2 class="tit_snb">마이보글</h2>
+				<div class="inner_snb">
+					<ul class="list_menu">
+						<li><a href="/mypage/orderList">주문 내역</a></li>
+						<li><a href="/mypage/listReviewWrite">상품 후기</a></li>
+						<li><a href="/mypage/listQna">상품 문의</a></li>
+						<li><a href="/mypage/loginMypage">개인 정보 수정</a></li>
+					</ul>
+				</div>
+			</div>
+	<!-- 이름줄때 앞에 join_ 붙이기 -->
 	<div class="join_container">
-		<div id="join_title">
-			<h2>개인 정보 수정</h2>
+		<div >
+			<h2 id="join_title">개인 정보 수정</h2>
 		</div>
 		<div id="join_essential">
 			<label class="join_8">*</label>필수입력사항
 		</div>
-		<hr width="1000px">
+		<!-- <hr id="hr" width="700px"> -->
 		
 		<form action="updateCustomer" method="post" name="joinForm">
 			<div class="join_form">
@@ -110,5 +131,44 @@ function passConfirm() {
 			
 		</form>
 	</div>
+	
+		</div>
+	
+	</div>
+	<div><jsp:include page="../common/footer.jsp"></jsp:include></div>
+	<!-- <div id="footer" class="hd_footer">
+		<div class="hd_footer_inner">
+			<div class="hd_footer_left">
+				<ul class="item">
+					<li>회사소개</li>
+					<li>이용약관</li>
+					<li>개인정보처리방침</li>
+					<li>맴버십프로그램</li>
+				</ul>
+				<div class="service">
+					<strong class="service_title">고객센터</strong>
+					<span class="service_tel">1800-0000</span>
+					<p class="service_desc">
+						평일,토요일 7:00~18:00
+						<br>
+						공휴일 7시 ~ 13시 (일요일 휴무)
+					</p>
+				</div>
+			</div>
+			<div class="hd_footer_right">
+				<div class="company">
+					<strong class="company_name">보글박스</strong>
+					<div class="company_info">
+						대표이사 : 일찍끝내조 | 사업장소재지 : 서울특별시 마포구 월드컵북로 21
+						<br>
+						사업자등록번호 : 211-12-1234
+						호스팅 서비스 사업자 : (주)보글박스
+					</div>
+				</div>
+				<em class="copyright">Copyright ⓒ2022 BOGGLE BOX. All Rights Reserved.</em>
+			</div>
+		</div>
+	</div>
+ -->
 </body>
 </html>

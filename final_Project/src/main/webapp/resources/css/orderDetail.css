@@ -1,0 +1,76 @@
+ #od_title,#od_orderNo{
+ 	margin-bottom: 5px;
+/* 	margin-left: 150px; */
+ }
+
+ .thumb{
+	display: block;
+    overflow: hidden;
+    background-color: #f4f4f4;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-size: cover;
+}
+.info{
+	float: left;
+	margin-top: 10px;
+}
+
+#od_form{
+/* 	margin-left: 200px; */
+	margin-top: 0px;
+}
+.od_box{
+	display: inline-block;
+	height: 100px;
+}
+#od_hr{
+	float: left;
+	width: 650px;
+/* 	margin-left: 50px; */
+	margin-bottom: 0px;
+}
+#od_hr_under{
+	float: left;
+	width: 650px;
+	margin: 0px;
+}
+img{
+	float: left;
+}
+.od_content{
+/* 	margin-left: 80px; */
+	width: 550px;
+	margin-top: 10px;
+	font-size: 15px;
+	line-height: 25px;
+}
+#od_cnt{
+	font-size: 13px;
+	color: #939393;
+}
+#od_status{
+	float:right;
+	color: #F2884B;
+}
+.od_hr_Info{
+	float: left;
+	width: 650px;
+	margin: 0px;
+	margin-top: 10px;
+}
+#od_btn{
+ 	margin-left: 250px;
+	background-color: #F2884B; 
+	color: white; 
+	padding: 5px 20px; 
+	text-align: center; 
+	display: inline-block;
+	border-radius: 3px;
+}
+.od_payInfo_content{
+	float: right;
+}
+.od_under_Info{
+	width: 630px;
+}

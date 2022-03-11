@@ -1,7 +1,3 @@
-* {
-font-family: 'Noto Sans KR', sans-serif;
-}
-
 #ol_detail_link{
 	float: right;
 	text-decoration: none;
@@ -11,6 +7,10 @@ font-family: 'Noto Sans KR', sans-serif;
 	margin-right: 30px;
 }
 
+/* .ol_form{
+	margin-left: 200px;
+}
+ */
 #ol_cancel{
 	background-color: #F2884B;
 	border-radius: 3px;
@@ -44,11 +44,12 @@ font-family: 'Noto Sans KR', sans-serif;
 #ol_hr{
 	float: left;
 	width: 700px;
+
 }
 
-h2{
+#ol_title{
 	margin-bottom: 5px;
-	margin-left: 5px;
+
 }
 #ol_date{
 	margin-left: 5px;

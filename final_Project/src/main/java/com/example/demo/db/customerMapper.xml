@@ -44,7 +44,7 @@
    </select>
   
   <select id="mypage_login" resultType="java.lang.Integer">
-  	select cust_pwd from customer where cust_id=#{cust_id}
+  	select count(*) from customer where cust_pwd=#{cust_pwd} and cust_id=#{cust_id}
   </select>
   
   <select id="getEmail" resultType="java.lang.String">

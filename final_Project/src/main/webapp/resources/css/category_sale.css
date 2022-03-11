@@ -1,0 +1,27 @@
+ .cate{
+	width: 1000px;
+	height: 100%;
+	margin: 25px auto 100px;
+	border-radius: 3px;
+	padding: 50px 50px;
+} 
+
+input[type=submit]{
+	background-color: #F2884B;
+	border-radius: 3px;
+	color: white;
+	font-size: 17px;
+	outline: none;
+	box-shadow: none;
+	border : 1px solid #F2884B;
+	margin-bottom: 20px;
+	margin-top: 40px;
+	margin-left: 20px;
+	text-decoration: none;
+	text-align: center;
+	font-weight: bold;
+}
+
+#category_code{
+	font-size: 17px;
+}

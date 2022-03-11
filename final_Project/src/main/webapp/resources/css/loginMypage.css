@@ -1,0 +1,33 @@
+#lm_container{
+	/* margin-left:250px; */
+	float: right;
+	width: 800px;
+} 
+#lm_content{
+	margin-left: 250px;
+	margin-top: 50px;
+	margin-bottom: 50px;
+}
+#lm_id{
+	margin-bottom: 30px;
+}
+#lm_id_content{
+	margin-left: 30px;
+}
+#lm_pwd_content{
+	margin-left: 20px;
+}
+#lm_submit{
+	margin-top: 30px;
+	margin-left: 330px;
+	color: white;
+	background-color : #F2884B;
+	border-radius: 3px;
+	font-size: 14px;
+	outline: none;
+	box-shadow: none;
+	border: #F2884B;
+	width: 70px;
+	height: 30px;	
+/* 	margin-bottom: 100px; */
+}

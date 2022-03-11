@@ -1,0 +1,88 @@
+.write_board .goods_info{
+	overflow: hidden;
+	padding: 20px 15px;
+	border-top: 1px solid #F26835;
+}
+
+.write_board .goods_info img{
+	float: left;
+	width: 90px;
+	margin-right: 25px;
+}
+
+.write_board .goods_info .product_name{
+	display: table;
+	font-size: 16px;
+	padding-top: 35px;
+	font-weight: 600;
+}
+
+.form_review .write_board .tbl{
+	border-bottom: 1px solid #dddfe1;
+	width: 100%;
+}
+
+.form_review .write_board .tbl th{
+	border-top: 1px solid #dddfe1;
+	background-color: #f7f7f7;
+}
+
+.form_review .write_board .tbl td{
+	padding: 10px 0 10px 10px;
+	border-top: 1px solid #dddfe1;
+}
+
+.form_review .tbl td:nth-child(1), .form_review .tbl td:nth-child(4){
+	border: none;
+	padding: 0;
+}
+
+.form_review .write_board .tbl .review_title{
+	width: 650px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #dddfe1;
+}
+
+.form_review .write_board .tbl .wrap_content{
+	padding: 8px 10px 9px;
+    border: 1px solid #dddfe1;
+}
+
+.form_review .write_board .tbl .review_content{
+	border: 0;
+	resize: none;
+	line-height: 18px;
+	height: 150px;
+    font-size: 15px;
+    outline: none;
+}
+
+.form_review .write_board .btn_rs{
+	display: block;
+    width: 95px;
+    border: 1px solid #F2884B;
+    background-color: #F2884B;
+    color: #fff;
+    line-height: 35px;
+    text-align: center;
+    border-radius: 2px;
+    margin-top: 30px;
+    float: right;
+    cursor: pointer;
+}
+
+.form_review .write_board .btn_su{
+	display: block;
+    width: 95px;
+    border: 1px solid #F2884B;
+    background-color: #F2884B;
+    color: #fff;
+    line-height: 35px;
+    text-align: center;
+    border-radius: 2px;
+    margin-top: 30px;
+    margin-right: 5px;
+    float: right;
+    cursor: pointer;
+}

@@ -1,0 +1,4125 @@
+commit 3ed57466ed47f34a9f314c323b218c20b81f3e71
+Author: unknown <ibisevic@naver.com>
+Date:   Mon Mar 7 22:37:03 2022 +0900
+
+    03-07 주문하기, 카테고리 판매량
+
+diff --git a/final_Project/pom.xml b/final_Project/pom.xml
+index f20cdfd..193b7c4 100644
+--- a/final_Project/pom.xml
++++ b/final_Project/pom.xml
+@@ -77,15 +77,42 @@
+ 		    <artifactId>commons-io</artifactId>
+ 		    <version>2.11.0</version>
+ 		</dependency>
+-		
+-		<!-- 서버재가동없이 -->
+-		<dependency>
++
++		<!-- 서버재가동없이 -->		
++ 		<dependency>
+ 			<groupId>org.springframework.boot</groupId>
+ 			<artifactId>spring-boot-devtools</artifactId>
+ 			<scope>runtime</scope>
+ 			<optional>true</optional>
+ 		</dependency>
+ 		
++		<dependency>
++		  <groupId>com.google.code.gson</groupId>
++		  <artifactId>gson</artifactId>
++		  <version>2.8.6</version>
++		</dependency>
++		
++		<!-- https://mvnrepository.com/artifact/org.json/json -->
++			<!-- 사용한 Json 파싱 라이브러리 -->
++			<dependency>
++			    <groupId>org.json</groupId>
++			    <artifactId>json</artifactId>
++			    <version>20180130</version>
++			</dependency>
++			
++			<!-- 메일발송 지원 기능 -->
++			<dependency>
++				<groupId>org.springframework</groupId>
++				<artifactId>spring-context-support</artifactId>
++			</dependency>
++			
++			<!-- Java Mail API -->
++			<dependency>
++				<groupId>javax.mail</groupId>
++				<artifactId>mail</artifactId>
++				<version>1.4.7</version>
++			</dependency>
++
+ 	</dependencies>
+ 
+ 	<build>
+diff --git a/final_Project/src/main/java/com/example/demo/SpringConfig.java b/final_Project/src/main/java/com/example/demo/SpringConfig.java
+index fc2032a..9e6a260 100644
+--- a/final_Project/src/main/java/com/example/demo/SpringConfig.java
++++ b/final_Project/src/main/java/com/example/demo/SpringConfig.java
+@@ -1,8 +1,11 @@
+ package com.example.demo;
+ 
+ 
++import java.util.Properties;
++
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
++import org.springframework.mail.javamail.JavaMailSenderImpl;
+ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+@@ -14,9 +17,33 @@ public class SpringConfig implements WebMvcConfigurer {
+ 	public void addInterceptors(InterceptorRegistry registry) {
+ 		registry.addInterceptor(new LoginIntercepter())
+ 		.addPathPatterns("/mypage/**");
++
+ 		
+ 		registry.addInterceptor(new AdminIntercepter() ) 
+ 		.addPathPatterns("/admin/**");
+ 
++
++//		.excludePathPatterns("/mypage/updateCustomer");
++
++	}
++	
++	@Bean
++	public JavaMailSenderImpl javaMailSender() {
++		JavaMailSenderImpl r = new JavaMailSenderImpl();
++		r.setHost("smtp.gmail.com");
++		r.setPort(587);
++		r.setUsername("shb04437@gmail.com");
++		r.setPassword("udpjudypyelxunjg");
++		r.setDefaultEncoding("UTF-8");
++		
++		Properties prop = new Properties();
++		prop.put("mail.smtp.starttls.enable", true);
++		prop.put("mail.smtp.auth", true);
++		prop.put("mail.smtp.ssl.checkserveridentity", true);
++		prop.put("mail.smtp.ssl.trust", "*");
++		prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
++		
++		r.setJavaMailProperties(prop);
++		return r;
+ 	}
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/controller/CartController.java b/final_Project/src/main/java/com/example/demo/controller/CartController.java
+index 44ac7aa..5440989 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/CartController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/CartController.java
+@@ -5,6 +5,7 @@ import java.util.List;
+ 
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
++import javax.servlet.http.HttpSession;
+ 
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.ui.Model;
+@@ -17,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
+ import com.example.demo.dao.CartDAO;
+ import com.example.demo.vo.CartProductVO;
+ import com.example.demo.vo.CartVO;
++import com.example.demo.vo.CustomerVO;
+ 
+ import lombok.Setter;
+ 
+@@ -26,21 +28,12 @@ public class CartController {
+ 	@Autowired
+ 	private CartDAO dao;
+ 
+-	@RequestMapping(value = "/market/insertCart", method = RequestMethod.POST)
+-	public ModelAndView insertSubmit(HttpServletRequest request, CartVO c) {
+-		int re = dao.insertCart(c);
+-		ModelAndView mav = new ModelAndView("redirect:/cartProduct");
+-		if (re != 1) {
+-			mav.setViewName("error");
+-			mav.addObject("msg", "장바구니 등록에 실패하였습니다.");
+-		}
+-		return mav;
+-	}
+ 
+ 	@RequestMapping("/market/cartProduct")
+-	public ModelAndView cartProduct() {
++	public ModelAndView cartProduct(HttpSession session) {
+ 		ModelAndView mav = new ModelAndView();
+-		mav.addObject("list", dao.cartProduct());
++		CustomerVO member = (CustomerVO)session.getAttribute("member");
++		mav.addObject("list", dao.cartProduct(member.getCust_id()));
+ 		return mav;
+ 	}
+ 
+diff --git a/final_Project/src/main/java/com/example/demo/controller/CustomerController.java b/final_Project/src/main/java/com/example/demo/controller/CustomerController.java
+index ce593c5..bff42cd 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/CustomerController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/CustomerController.java
+@@ -1,10 +1,16 @@
+ package com.example.demo.controller;
+ 
++import java.net.http.HttpResponse;
++import java.util.HashMap;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
+ import javax.servlet.http.HttpSession;
+ import javax.websocket.server.PathParam;
+ 
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
+ import org.springframework.web.bind.annotation.RequestParam;
+@@ -36,19 +42,29 @@ public class CustomerController {
+ 			mav.setViewName("insertCustomerOK");
+ 			mav.addObject("msg",c.getCust_id()+"보글님 회원가입이 완료되었습니다.");
+ 		}else {
+-			mav.setViewName("error");
++			mav.setViewName("/common/error");
+ 		}
+ 		return mav;
+ 	}
+ 	
+-	
+-	@RequestMapping(value = "/user/idCheck", method = RequestMethod.GET)
++	@RequestMapping(value = "/idCheck", method = RequestMethod.GET)
+ 	@ResponseBody
+-	public int idCheck(@RequestParam("cust_id") String cust_id) {
+-		return dao.doubleCheck_id(cust_id);
++	public int idCheck_submit(HttpServletRequest request, HttpSession session ,String cust_id)  {
++		int re = dao.doubleCheck_id(cust_id);
++		System.out.println("아이디 중복확인 결과:"+re);
++		return re;
+ 		
+ 	}
+ 	
++	@RequestMapping(value = "/emailCheck", method = RequestMethod.GET)
++	@ResponseBody
++	public int emailCheck_submit(HttpServletRequest request, HttpSession session ,String cust_email)  {
++		int re = dao.doubleCheck_email(cust_email);
++		System.out.println("이메일 중복확인 결과:"+re);
++		return re;
++		
++	}
++
+ 	@RequestMapping(value = "/login", method = RequestMethod.GET)
+ 	public void login_form() {
+ 		
+@@ -63,7 +79,7 @@ public class CustomerController {
+ 		if(re == 1) {
+ 			msg = cust_id + "님, 로그인 하였습니다.";
+ 			session.setAttribute("member",dao.detailCustomer(cust_id));
+-			session.setAttribute("now_id", cust_id);
++			session.setAttribute("cust_id", cust_id);
+ 			session.setAttribute("role", dao.getRole(cust_id));
+ 		}else { //re가 -1
+ 			msg = "아이디가 존재하지 않습니다.";
+@@ -75,12 +91,28 @@ public class CustomerController {
+ 	
+ 	@RequestMapping(value = "/find_id", method = RequestMethod.GET)
+ 	public void find_id_form() {
+-		
++
+ 	}
+ 	
+ 	@RequestMapping(value = "/find_id", method = RequestMethod.POST)
+-	public void find_id_submit() {
++	public ModelAndView find_id_submit(Model model, String cust_name, String cust_phone) {
++		ModelAndView mav = new ModelAndView();
+ 		
++		HashMap map = new HashMap();
++		map.put("cust_name",cust_name);
++		map.put("cust_phone",cust_phone);
++		String cust_id = dao.findId(map);
++		System.out.println("cust_id:"+cust_id);
++		System.out.println("cust_name:"+cust_name);
++		System.out.println("cust_phone:"+cust_phone);
++		if(cust_id != null) {
++			mav.setViewName("/find_idOK");
++			mav.addObject("msg","고객님의 아이디는"+cust_id+"입니다.");
++		}else {
++			mav.setViewName("redirect:/common/error");
++			mav.addObject("msg","이름과 연락처를 확인해주세요.");
++		}		
++		return mav;
+ 	}
+ 	
+ 	@RequestMapping(value = "/find_pwd", method = RequestMethod.GET)
+@@ -89,11 +121,70 @@ public class CustomerController {
+ 	}
+ 	
+ 	@RequestMapping(value = "/find_pwd", method = RequestMethod.POST)
+-	public void find_pwd_submit() {
++	public ModelAndView find_pwd_submit(Model model, String cust_id, String cust_phone) {
++		ModelAndView mav = new ModelAndView();
+ 		
++		HashMap map = new HashMap();
++		map.put("cust_id",cust_id);
++		map.put("cust_phone",cust_phone);
++		String cust_pwd = dao.findPwd(map);
++		System.out.println("cust_pwd:"+cust_pwd);
++		System.out.println("cust_id:"+cust_id);
++		System.out.println("cust_phone:"+cust_phone);
++		if(cust_pwd != null) {
++			mav.setViewName("/find_pwdOK");
++			mav.addObject("msg","고객님의 비밀번호는"+cust_pwd+"입니다.");
++		}else {
++			mav.setViewName("/common/error");
++			mav.addObject("msg","아이디와 연락처를 확인해주세요.");
++		}		
++		return mav;
+ 	}
+ 	
++	@RequestMapping(value = "/mypage/updateCustomer", method = RequestMethod.GET)
++	public void update_form(HttpSession session, Model model, String cust_id) {
++		CustomerVO member = (CustomerVO)session.getAttribute("member");
++		model.addAttribute("c",dao.detailCustomer(member.getCust_id()));
++	}
+ 	
++	@RequestMapping(value = "/mypage/updateCustomer", method = RequestMethod.POST)
++	public ModelAndView update_submit(CustomerVO c) {
++		ModelAndView mav = new ModelAndView();
++		int re = dao.updateCustomer(c);
++		if(re == 1) {
++			mav.setViewName("redirect:/main");
++		}else {
++			mav.addObject("msg","정보수정에 실패했습니다.");
++			mav.setViewName("/common/error");
++		}
++		return mav;
++	}
++	
++	@RequestMapping(value="/logout",method=RequestMethod.GET)
++	public String getLogout(HttpSession session) throws Exception{
++		session.invalidate();
++		return "redirect:/main";
++	}
++	
++	@RequestMapping(value = "mypageMain", method = RequestMethod.GET)
++	public void mypageMain_form(HttpSession session, Model model) {
++		String cust_id = (String)session.getAttribute("cust_id");
++	}
++		
++	@RequestMapping(value = "mypageMain", method = RequestMethod.POST)
++	public ModelAndView mypageMain_submit(String cust_id, String cust_pwd) {
++		ModelAndView mav = new ModelAndView();
++		System.out.println(cust_pwd);
++		int re = dao.mypage_login(cust_id);
++		if(re == 1) {
++			mav.setViewName("redirect:/main");
++		}else {
++			mav.addObject("msg","비밀번호가 일치하지 않습니다.");
++			mav.setViewName("/error");
++		}
++		
++		return mav;
++	}
+ }
+ 
+ 
+diff --git a/final_Project/src/main/java/com/example/demo/controller/CustomerOrder_detailController.java b/final_Project/src/main/java/com/example/demo/controller/CustomerOrder_detailController.java
+index 7f6b8ce..f141b7b 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/CustomerOrder_detailController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/CustomerOrder_detailController.java
+@@ -1,13 +1,23 @@
+ package com.example.demo.controller;
+ 
++import javax.servlet.http.HttpServletRequest;
++
++import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RequestParam;
+ import org.springframework.web.bind.annotation.RestController;
++import org.springframework.web.servlet.ModelAndView;
+ 
+-import com.example.demo.dao.Customer_orderDAO;
++import com.example.demo.dao.CustomerOrder_detailDAO;
++import com.example.demo.vo.CustomerOrder_detailVO;
+ 
+ import lombok.Setter;
+ 
+ @RestController
+ @Setter
+ public class CustomerOrder_detailController {
++	
++	private CustomerOrder_detailDAO dao;
++	
+ 
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/controller/Customer_orderController.java b/final_Project/src/main/java/com/example/demo/controller/Customer_orderController.java
+index ebea626..9be0d83 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/Customer_orderController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/Customer_orderController.java
+@@ -1,34 +1,159 @@
+-//package com.example.demo.controller;
+-//
+-//import java.io.FileOutputStream;
+-//import java.util.List;
+-//
+-//import javax.servlet.http.HttpServletRequest;
+-//import javax.servlet.http.HttpServletResponse;
+-//
+-//import org.springframework.beans.factory.annotation.Autowired;
+-//import org.springframework.ui.Model;
+-//import org.springframework.web.bind.annotation.RequestMapping;
+-//import org.springframework.web.bind.annotation.RequestMethod;
+-//import org.springframework.web.bind.annotation.RestController;
+-//import org.springframework.web.multipart.MultipartFile;
+-//import org.springframework.web.servlet.ModelAndView;
+-//
+-//import com.example.demo.dao.Customer_orderDAO;
+-//import com.example.demo.vo.CartVO;
+-//
+-//import lombok.Setter;
+-//
+-//@RestController
+-//@Setter
+-//public class Customer_orderController {
+-//	
+-//	@Autowired
+-//	private Customer_orderDAO dao;
+-//
+-//	@RequestMapping(value = "/market/orderPage")
+-//	public ModelAndView orderPage() {
++package com.example.demo.controller;
++import java.util.List;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++import javax.servlet.http.HttpSession;
++
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.mail.SimpleMailMessage;
++import org.springframework.mail.javamail.JavaMailSender;
++import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RequestMethod;
++import org.springframework.web.bind.annotation.ResponseBody;
++
++import com.example.demo.dao.CartDAO;
++import com.example.demo.dao.CustomerDAO;
++import com.example.demo.dao.CustomerOrder_detailDAO;
++import com.example.demo.dao.Customer_orderDAO;
++import com.example.demo.dao.ReviewDAO;
++import com.example.demo.vo.CartVO;
++import com.example.demo.vo.CustomerOrder_detailVO;
++import com.example.demo.vo.CustomerVO;
++import com.example.demo.vo.Customer_orderVO;
++import com.example.demo.vo.ListDetailVO;
++import com.example.demo.vo.OrderCommitVO;
++import com.example.demo.vo.ReviewVO;
++import com.google.gson.Gson;
++
++
++import lombok.Setter;
++
++@Controller
++@Setter
++public class Customer_orderController {
++	
++	@Autowired
++	private JavaMailSender javaMailSender;
++	
++	@Autowired
++	private CustomerDAO custDAO;
++	
++	@Autowired
++	private Customer_orderDAO dao;
++	
++	@Autowired
++	private CustomerOrder_detailDAO codDAO;
++	
++	@Autowired
++	private ReviewDAO reDAO;
++	
++	@Autowired
++	private CartDAO cartDAO;
++	
++
++	@RequestMapping("/mypage/orderList")
++	public void list(HttpSession session, Model model) {
++		CustomerVO member = (CustomerVO)session.getAttribute("member");
++		model.addAttribute("list",dao.listOrder(member.getCust_id()));
++	}
++	
++	@RequestMapping("/mypage/orderDetail")
++	public void detail(Model model,int order_no) {
++		List<ListDetailVO> list = codDAO.listDetail(order_no);
++//		System.out.println("주문상세내역:"+list);
++		model.addAttribute("list",list);
++		model.addAttribute("o",list.get(0));
++		
++		model.addAttribute("totalDetail",codDAO.totalDetail(order_no));
++		ListDetailVO ld = new ListDetailVO();
++	}
++
++	@RequestMapping(value = "/market/orderRequest", method = RequestMethod.POST)
++	@ResponseBody
++	public void insertCustomer_order(HttpServletRequest request, HttpServletResponse response) {
++		Gson gson = new Gson();
++		
++		
++		
++		System.out.println("오더리스트 출력:"+request.getAttribute("orderList"));
++		System.out.println("오더리스트 출력:"+request.getParameter("orderList"));
++		String data = request.getParameter("orderList");
++		data = data.replace("},{","}, {");
++		int length = data.length();
++		String[] orderList = data.substring(1, length-1).split(", ");
++		int order_no = dao.order_getNextNo();
++		String cust_email="";
++		String cust_id="";
++		boolean skip = false;
++		for(String order : orderList) {
++			OrderCommitVO ocm= gson.fromJson(order, OrderCommitVO.class);
++			
++			ReviewVO r = gson.fromJson(order, ReviewVO.class);
++			CustomerOrder_detailVO cd = gson.fromJson(order, CustomerOrder_detailVO.class);
++			CartVO cart= gson.fromJson(order, CartVO.class);
++			if(!skip) {
++				Customer_orderVO co = gson.fromJson(order, Customer_orderVO.class);
++				co.setOrder_no(order_no);
++				dao.insertCustomer_order(co);
++				skip=true;
++				cust_email = custDAO.getEmail(co.getCust_id());
++				cust_id=co.getCust_id();
++				System.out.println("B"+co);
++			};
++
++			cd.setDetail_no(codDAO.orderdetail_getNextNo());
++			cd.setOrder_no(order_no);
++			cd.setDetail_cnt(ocm.getProduct_cnt());
++			cd.setDetail_price(ocm.getProduct_cnt()*ocm.getProduct_price());
++			
++			r.setReview_no(reDAO.review_getNextNo());
++			r.setDetail_no(codDAO.orderdetail_getNextNo());
++			
++//			cve.setCust_id(ocm.getCust_id());
++			System.out.println("A"+order);
++			System.out.println("C"+r);
++			System.out.println("D"+cd);
++			System.out.println("E"+cart);
++			codDAO.insertCustomerOrder_detail(cd);
++			reDAO.defaultReview(r);
++			cartDAO.deleteCart(cart.getCart_no());	
++			
++		}
++		String subject = cust_id+"님, 주문이 완료되었습니다";
++		String content = "주문번호: "+order_no;
++		
++		SimpleMailMessage mailMessage = new SimpleMailMessage();
++		mailMessage.setSubject(subject);
++		mailMessage.setText(content);
++		mailMessage.setFrom("shb04437@gmail.com");
++		mailMessage.setTo(cust_email);
++		
++		try {
++			javaMailSender.send(mailMessage);
++			System.out.println(cust_email+"에게 메일을 발송하였습니다.");
++		}catch (Exception e) {
++			System.out.println("예외발생:"+e.getMessage());
++		}
++
++
++		
++//		int length = request.getParameter("orderList").length();
++//		String[] orderList = request.getParameter("orderList").substring(1, length-1).split(", ");
++//		for(String order : orderList) {
++//			System.out.println("오더붕어 :"+order);
++//		}
++//		OrderCommitVO ocm= gson.fromJson(request.getParameter("orderList"), OrderCommitVO.class);
++//		Customer_orderVO cve =new Customer_orderVO();
++//		cve.setCust_id(ocm.getCust_id());
++//		
+ //		ModelAndView mav = new ModelAndView();
+ //		return mav;
+-//	}
+-//}
++	}
++
++	
++
++	
++}
+diff --git a/final_Project/src/main/java/com/example/demo/controller/ProductController.java b/final_Project/src/main/java/com/example/demo/controller/ProductController.java
+index fa10b59..348f237 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/ProductController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/ProductController.java
+@@ -3,6 +3,7 @@ package com.example.demo.controller;
+ import java.io.File;
+ import java.io.FileOutputStream;
+ import java.util.HashMap;
++import java.util.List;
+ 
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpSession;
+@@ -10,6 +11,9 @@ import javax.servlet.http.HttpSession;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.PathVariable;
++import org.springframework.web.bind.annotation.RequestBody;
++
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
+ import org.springframework.web.bind.annotation.RequestParam;
+@@ -17,7 +21,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
+ import org.springframework.web.multipart.MultipartFile;
+ import org.springframework.web.servlet.ModelAndView;
+ 
++import com.example.demo.dao.CartDAO;
+ import com.example.demo.dao.ProductDAO;
++import com.example.demo.dao.QnaDAO;
++import com.example.demo.dao.ReviewDAO;
++import com.example.demo.vo.CartVO;
++import com.example.demo.vo.ContentReviewVO;
++import com.example.demo.vo.ListQnaVO;
+ import com.example.demo.vo.ProductVO;
+ 
+ import lombok.Setter;
+@@ -29,14 +39,28 @@ public class ProductController {
+ 	@Autowired
+ 	private ProductDAO dao;
+ 	
++	@Autowired
++	private ReviewDAO reviewDao;
++	
++	@Autowired
++	private QnaDAO qnaDao;
++	
++	@Autowired
++	private CartDAO cartDao;
++	
+ 	
+ 	@RequestMapping("/market/listProduct")
+-	public void listProduct(String category_code,Model model,HttpSession session,@RequestParam(value = "pageNUM", defaultValue = "1") int pageNUM){
++	public void listProduct(String category_code,String orderType,Model model,HttpSession session,@RequestParam(defaultValue = "1") int pageNUM){
++
+ 		if(category_code == null) {
+ 			category_code = (String)session.getAttribute("category_code");
+ 		}
+ 		
+-//		System.out.println("정렬컬럼:"+orderColumn);
++		if(orderType == null && session.getAttribute("orderType") != null) {
++			orderType = (String)session.getAttribute("orderType");
++		}
++		
++		System.out.println("정렬컬럼:"+orderType);
+ 		System.out.println("pageNUM:"+pageNUM);
+ 		
+ 		int start = (pageNUM-1)*dao.pageSIZE +1;
+@@ -44,23 +68,13 @@ public class ProductController {
+ 		System.out.println("start:"+start);
+ 		System.out.println("end:"+end);
+ 		
+-		
+ 		HashMap map = new HashMap();
+-		//map.put("orderColumn", orderColumn);
++		map.put("orderType", orderType);
+ 		map.put("category_code", category_code);
+ 		map.put("start", start);
+ 		map.put("end",end);
+ 		System.out.println("category_code:"+category_code);
+ 		
+-		/*
+-		 * ResultVO r = new ResultVO(); r.setList(dao.listProduct(map));
+-		 * r.setTotalPage(dao.totalPage);
+-		 * System.out.println("totalPage:"+dao.totalPage);
+-		 * 
+-		 * return r;
+-		 */
+-		
+-		//model.addAttribute("list", dao.listProduct(category_code));
+ 		model.addAttribute("list", dao.listProduct(map));
+ 		model.addAttribute("totalPage", dao.totalPage);
+ 		
+@@ -69,9 +83,59 @@ public class ProductController {
+ 		}
+ 		
+ 		
+-//		if(orderColumn != null) {
+-//			session.setAttribute("orderColumn", orderColumn);
+-//		}
++		if(orderType != null) {
++			session.setAttribute("orderType", orderType);
++		}
++	}
++	
++	@RequestMapping("/market/recentProduct")
++	public void recentProduct(String orderType,Model model) {
++		System.out.println("orderType:"+orderType);
++		model.addAttribute("list", dao.recentProduct(orderType));
++	}
++	
++	@RequestMapping("/market/detailProduct")
++	public void detailProduct(int product_no,Model model,HttpSession session) {
++		String cust_id = (String)session.getAttribute("cust_id");
++		ProductVO p = dao.detailProduct(product_no);
++		p.setProduct_no(product_no);
++		model.addAttribute("p", p);
++		System.out.println("p:"+p);
++		
++		List<ContentReviewVO> reviewList = reviewDao.findAllReview(product_no);
++		model.addAttribute("reviewList", reviewList);
++		System.out.println("reviewList:"+reviewList);
++		
++		List<ListQnaVO> qnaList = qnaDao.findAllQna(product_no);
++		model.addAttribute("qnaList", qnaList);
++		System.out.println("qnaList:"+qnaList);
++	}
++	
++	@RequestMapping(value = "/market/insertCart",method = RequestMethod.POST)
++	@ResponseBody
++	public String insertCart(@RequestBody String data) {
++		String[] arr = data.split(",");
++		System.out.println("arr1:"+arr[0]);
++		System.out.println("arr2:"+arr[1]);
++		System.out.println("arr3:"+arr[2]);
++		
++		String cust_id = arr[0].substring(12, arr[0].length()-1);
++		int product_no = Integer.parseInt(arr[1].substring(14, arr[1].length()-1));
++		int product_cnt = Integer.parseInt(arr[2].substring(15,arr[2].length()-2 ));
++		System.out.println("cust_id:"+cust_id);
++		System.out.println("product_no:"+product_no);
++		System.out.println("product_cnt:"+product_cnt);
++		int re = 0;
++		
++
++		if(cartDao.findByProduct(cust_id,product_no) == 1) {
++			re = -1;
++		}else {
++			CartVO c = new CartVO(cartDao.cartGetNextNo(), product_cnt, cust_id, product_no);
++			re = cartDao.insertCart(c);
++		}
++		
++		return re>0?"true":"false";
+ 	}
+ 	
+ 	@RequestMapping("/admin/adminMain")
+@@ -254,9 +318,20 @@ public class ProductController {
+ 		return mav;
+ 	}
+ 	
+-	@RequestMapping("/admin/category_sale")
++	@RequestMapping(value="/admin/category_sale", method = RequestMethod.GET)
+ 	public void category_sale() {
+ 		
+ 	}
+ 	
++	
++	@RequestMapping(value="/admin/category_sale", method = RequestMethod.POST)
++	@ResponseBody
++	public Object category_sale(String category_code) {
++		System.out.println(category_code);
++		List<ProductVO> list = dao.category_sale(category_code);
++		System.out.println(list);
++
++		return list;
++	}
++	
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/controller/QnaController.java b/final_Project/src/main/java/com/example/demo/controller/QnaController.java
+index fed5603..db9bda3 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/QnaController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/QnaController.java
+@@ -34,6 +34,13 @@ public class QnaController {
+ 		model.addAttribute("list",dao.listQna(member.getCust_id()));
+ 	}
+ 	
++	@RequestMapping("/mypage/detailQna")
++	public ModelAndView detail(int qna_no) {
++		ModelAndView mav = new ModelAndView();
++		mav.addObject("q",dao.detailQna(qna_no));
++		return mav;
++	}
++	
+ 	@RequestMapping(value = "/mypage/insertQna", method = RequestMethod.GET)
+ 	public void insert_form(Model model) {
+ 		model.addAttribute("qna_no",dao.getNextNo());
+@@ -54,7 +61,7 @@ public class QnaController {
+ 		}
+ 		int re = dao.insertQna(q);
+ 		if(re != 1) {
+-			mav.setViewName("error");
++			mav.setViewName("/common/error");
+ 			mav.addObject("msg","게시글 등록에 실패하였습니다");
+ 		}else {//insert성공했으면
+ 			try {
+@@ -70,13 +77,7 @@ public class QnaController {
+ 		}
+ 		return mav;
+ 	}
+-	
+-	@RequestMapping("/mypage/detailQna")
+-	public ModelAndView detail(int qna_no) {
+-		ModelAndView mav = new ModelAndView();
+-		mav.addObject("q",dao.detailQna(qna_no));
+-		return mav;
+-	}
++
+ 	
+ 	@RequestMapping(value = "/mypage/updateQna", method = RequestMethod.GET)
+ 	public void update_form(Model model, int qna_no) {
+@@ -110,7 +111,7 @@ public class QnaController {
+ 		int re = dao.updateQna(q);
+ 		
+ 		if(re != 1) {
+-			mav.setViewName("error");
++			mav.setViewName("/common/error");
+ 			mav.addObject("msg", "게시글 수정에 실패하였습니다.");
+ 		}else { //수정에 성공
+ 			if(oldFname != null && !oldFname.equals("")){ //사진도 수정을 했다면
+@@ -131,7 +132,7 @@ public class QnaController {
+ 		ModelAndView mav = new ModelAndView("redirect:/mypage/listQna");
+ 		int re = dao.deleteQna(qna_no);
+ 		if(re != 1) {
+-			mav.setViewName("error");
++			mav.setViewName("/common/error");
+ 			mav.addObject("msg", "게시물 삭제에 실패하였습니다.");
+ 		}else {
+ 			File file = new File(path+"/"+oldFname);
+@@ -140,9 +141,28 @@ public class QnaController {
+ 		return mav;
+ 	}
+ 	
+-	@RequestMapping(value = "/admin/updateQna_answer", method = RequestMethod.GET)
+-	public void updateQna_answer_form(Model model, int qna_no,String qna_answer) {
+-		model.addAttribute("q",dao.detailQna(qna_no));
++//	@RequestMapping(value = "/admin/updateQna_answer", method = RequestMethod.GET)
++//	public void updateQna_answer_form(Model model, int qna_no) {
++//		model.addAttribute("q",dao.detailQna(qna_no));
++//	}
++	
++	@RequestMapping(value = "/admin/updateQna_answer",method = RequestMethod.GET )
++	public ModelAndView updateQna_answer_form(int qna_no) { //수정한 고객에대해 상태유지해야해서 보이드x 모델앤드뷰 사용
++		ModelAndView mav = new ModelAndView();
++		mav.addObject("q",dao.mgr_detailQna(qna_no));
++		return mav;
++	}
++	
++	@RequestMapping(value = "/admin/updateQna_answer",method = RequestMethod.POST ) //요청하는 서비스명
++	public ModelAndView updateQna_answer_submit(HttpServletRequest request,QnaVO q) {
++		ModelAndView mav = new ModelAndView("redirect:/admin/mgr_listQna");
++		System.out.println(q);
++		int re = dao.updateQna_answer(q);
++		if(re != 1) {
++			mav.setViewName("/common/error");
++			mav.addObject("msg","답글달기에 실패하였습니다.");
++		}
++		return mav;
+ 	}
+ 	
+ 	@RequestMapping("/admin/mgr_listQna")
+@@ -153,6 +173,7 @@ public class QnaController {
+ 	@RequestMapping("/admin/mgr_detailQna")
+ 	public void mgr_detailQna(int qna_no,Model model) {
+ 		model.addAttribute("q",dao.mgr_detailQna(qna_no));
++
+ 	}
+ 	
+ 	
+diff --git a/final_Project/src/main/java/com/example/demo/controller/ReviewController.java b/final_Project/src/main/java/com/example/demo/controller/ReviewController.java
+index 55b11e6..a0a5770 100644
+--- a/final_Project/src/main/java/com/example/demo/controller/ReviewController.java
++++ b/final_Project/src/main/java/com/example/demo/controller/ReviewController.java
+@@ -108,4 +108,6 @@ public class ReviewController {
+ 		c.setReview_no(review_no);
+ 		model.addAttribute("c", c);
+ 	}
++	
++	
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/dao/CartDAO.java b/final_Project/src/main/java/com/example/demo/dao/CartDAO.java
+index cf319dc..129bb2f 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/CartDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/CartDAO.java
+@@ -1,5 +1,6 @@
+ package com.example.demo.dao;
+ 
++import java.util.HashMap;
+ import java.util.List;
+ 
+ import org.springframework.stereotype.Repository;
+@@ -14,8 +15,8 @@ public class CartDAO {
+ 		return DBManager.insertCart(c);
+ 	}
+ 	
+-	public List<CartProductVO> cartProduct(){
+-		return DBManager.cartProduct();
++	public List<CartProductVO> cartProduct(String cust_id){
++		return DBManager.cartProduct(cust_id);
+ 	}
+ 	
+ 	public int updateCart(CartVO c) {
+@@ -29,4 +30,12 @@ public class CartDAO {
+ 	public CartProductVO cartOrder(CartVO c) {
+ 		return DBManager.cartOrder(c);
+ 	}
++	
++	public int cartGetNextNo() {
++		return DBManager.cartGetNextNo();
++	}
++	
++	public int findByProduct(String cust_id,int product_no) {
++		return DBManager.findByProduct(cust_id,product_no);
++	}
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/dao/CustomerDAO.java b/final_Project/src/main/java/com/example/demo/dao/CustomerDAO.java
+index 1090640..57a9179 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/CustomerDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/CustomerDAO.java
+@@ -22,26 +22,23 @@ public class CustomerDAO {
+ 		return DBManager.doubleCheck_email(cust_email);
+ 	}
+ 	
+-	//1. id가 존재하지 않는 경우 int -1을 반환
+-	//2. 암호가 일치하지 않는 경우 int 0을 반환
+-	//3. 암호가 일치하는 경우 int 1을 반환
+ 	public int login(String cust_id, String cust_pwd) {
+ 		return DBManager.login(cust_id, cust_pwd);
+ 	}
+ 	
+-	public HashMap findId(String cust_name, String cust_phone) {
+-		return DBManager.findId(cust_name, cust_phone);
++	public String findId(HashMap map) {
++		return DBManager.findId(map);
+ 	}
+ 	
+-	public HashMap findPwd(String cust_id, String cust_phone) {
+-		return DBManager.findPwd(cust_id, cust_phone);
++	public String findPwd(HashMap map) {
++		return DBManager.findPwd(map);
+ 	}
+ 	
+ 	public CustomerVO detailCustomer(String cust_id) {
+ 		return DBManager.detailCustomer(cust_id);
+ 	}
+ 	
+-	public int  updateCustomer(CustomerVO c) {
++	public int updateCustomer(CustomerVO c) {
+ 		return DBManager.updateCustomer(c);
+ 	}
+ 	
+@@ -49,7 +46,17 @@ public class CustomerDAO {
+ 		return DBManager.showCustomer(cust_id);
+ 	}
+ 	
++
+ 	public String getRole(String cust_id) {
+ 		return DBManager.getRole(cust_id);
+ 	}
++
++	public int mypage_login(String cust_id) {
++		return DBManager.mypageMain(cust_id);
++	}
++	
++	public String getEmail(String cust_id) {
++		return DBManager.getEmail(cust_id);
++	}
++
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/dao/CustomerOrder_detailDAO.java b/final_Project/src/main/java/com/example/demo/dao/CustomerOrder_detailDAO.java
+index e7db98f..ed5769b 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/CustomerOrder_detailDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/CustomerOrder_detailDAO.java
+@@ -22,4 +22,8 @@ public class CustomerOrder_detailDAO {
+ 	public int insertCustomerOrder_detail(CustomerOrder_detailVO cd) {
+ 		return DBManager.insertCustomerOrder_detail(cd);
+ 	}
++	
++	public int orderdetail_getNextNo() {
++		return DBManager.orderdetail_getNextNo();
++	}
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/dao/Customer_orderDAO.java b/final_Project/src/main/java/com/example/demo/dao/Customer_orderDAO.java
+index ac7aa24..cd7f32c 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/Customer_orderDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/Customer_orderDAO.java
+@@ -32,4 +32,12 @@ public class Customer_orderDAO {
+ 	public List<MonthTotalVO> monthTotal() {
+ 		return DBManager.monthTotal();
+ 	}
++	
++	public int getOrder_count() {
++		return DBManager.getOrder_count();
++	}
++	
++	public int order_getNextNo() {
++		return DBManager.order_getNextNo();
++	}
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/dao/ProductDAO.java b/final_Project/src/main/java/com/example/demo/dao/ProductDAO.java
+index dbdb1f4..2fe2dbd 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/ProductDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/ProductDAO.java
+@@ -26,6 +26,14 @@ public class ProductDAO {
+ 		return DBManager.listProduct(map);
+ 	}
+ 	
++	public List<ProductVO> recentProduct(String orderType){
++		return DBManager.recentProduct(orderType);
++	}
++	
++	public ProductVO detailProduct(int product_no) {
++		return DBManager.detailProduct(product_no);
++	}
++	
+ 	public List<ProductVO> mgr_listProduct(HashMap map){
+ 		mgr_totalRecord = DBManager.mgr_getTotalRecord();
+ 		mgr_totalPage = (int)Math.ceil(mgr_totalRecord/(double)mgr_pageSIZE);
+diff --git a/final_Project/src/main/java/com/example/demo/dao/QnaDAO.java b/final_Project/src/main/java/com/example/demo/dao/QnaDAO.java
+index 5a201e7..60a5b70 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/QnaDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/QnaDAO.java
+@@ -5,6 +5,7 @@ import java.util.List;
+ import org.springframework.stereotype.Repository;
+ 
+ import com.example.demo.db.DBManager;
++import com.example.demo.vo.ListQnaVO;
+ import com.example.demo.vo.QnaVO;
+ 
+ @Repository
+@@ -34,8 +35,12 @@ public class QnaDAO {
+ 		return DBManager.getNextNo();
+ 	}
+ 	
+-	public int updateQna_answer(String qna_answer, int qna_no) {
+-		return DBManager.updateQna_answer(qna_answer, qna_no);
++	public List<ListQnaVO> findAllQna(int product_no){
++		return DBManager.findAllQna(product_no);
++	}
++	
++	public int updateQna_answer(QnaVO q) {
++		return DBManager.updateQna_answer(q);
+ 	}
+ 	
+ 	public List<QnaVO> mgr_listQna(){
+diff --git a/final_Project/src/main/java/com/example/demo/dao/ReviewDAO.java b/final_Project/src/main/java/com/example/demo/dao/ReviewDAO.java
+index 976ea7f..2b20419 100644
+--- a/final_Project/src/main/java/com/example/demo/dao/ReviewDAO.java
++++ b/final_Project/src/main/java/com/example/demo/dao/ReviewDAO.java
+@@ -35,4 +35,16 @@ public class ReviewDAO {
+ 	public ReviewVO findByNo(int review_no) {
+ 		return DBManager.findByNo(review_no);
+ 	}
++	
++	public List<ContentReviewVO> findAllReview(int product_no){
++		return DBManager.findAllReview(product_no);
++	}
++	
++	public int review_getNextNo() {
++		return DBManager.review_getNextNo();
++	}
++	
++	public int defaultReview(ReviewVO r) {
++		return DBManager.defaultReview(r);
++	}
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/db/CartMapper.xml b/final_Project/src/main/java/com/example/demo/db/CartMapper.xml
+index 3e1ef14..61af0e6 100644
+--- a/final_Project/src/main/java/com/example/demo/db/CartMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/CartMapper.xml
+@@ -4,14 +4,14 @@
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cart">
+   <insert id="insertCart" parameterType="cartVO">
+-  	insert into cart(cart_no,cust_id,product_no,product_cnt,isOrder) values(#{cart_no},#{cust_id},#{product_no},#{product_cnt},0)
++  	insert into cart values (#{cart_no},#{product_cnt},#{cust_id},#{product_no})
+   </insert>
+   
+   <select id="cartProduct" resultType="cartProductVO">
+   	select p.product_no,cart_no, cust_id, product_img,product_name,product_price,product_cnt from product p,cart c where p.product_no=c.product_no and cust_id=#{cust_id} order by cart_no desc
+   </select>
+   
+-  <select id="getNextNo" resultType="java.lang.Integer">
++  <select id="cartGetNextNo" resultType="java.lang.Integer">
+   	select nvl(max(cart_no),0)+1 from cart
+   </select>
+   
+@@ -27,4 +27,7 @@
+     	UPDATE cart SET isOrder = 1 WHERE cart_no = #{cart_no} AND cust_id = #{cust_id}	
+   </update> 	
+   
++  <select id="findByProduct" resultType="java.lang.Integer">
++  	select count(*) from cart where cust_id=#{cust_id} and product_no=#{product_no}
++  </select>
+ </mapper>
+\ No newline at end of file
+diff --git a/final_Project/src/main/java/com/example/demo/db/DBManager.java b/final_Project/src/main/java/com/example/demo/db/DBManager.java
+index f6e3a78..d93f175 100644
+--- a/final_Project/src/main/java/com/example/demo/db/DBManager.java
++++ b/final_Project/src/main/java/com/example/demo/db/DBManager.java
+@@ -17,6 +17,7 @@ import com.example.demo.vo.CustomerVO;
+ import com.example.demo.vo.Customer_orderVO;
+ import com.example.demo.vo.ListDetailVO;
+ import com.example.demo.vo.ListOrderVO;
++import com.example.demo.vo.ListQnaVO;
+ import com.example.demo.vo.ListReviewVO;
+ import com.example.demo.vo.MonthTotalVO;
+ import com.example.demo.vo.OrderCancelVO;
+@@ -58,6 +59,20 @@ public class DBManager {
+ 		return no;
+ 	}
+ 	
++	public static List<ProductVO> recentProduct(String orderType){
++		SqlSession session = factory.openSession();
++		List<ProductVO> list = session.selectList("product.recentProduct",orderType);
++		session.close();
++		return list;
++	}
++	
++	public static ProductVO detailProduct(int product_no) {
++		SqlSession session = factory.openSession();
++		ProductVO p = session.selectOne("product.detailProduct", product_no);
++		session.close();
++		return p;
++	}
++	
+ 	public static List<ProductVO> mgr_listProduct(HashMap map){
+ 		SqlSession session = factory.openSession();
+ 		List<ProductVO> list = session.selectList("product.mgr_listProduct",map);
+@@ -165,6 +180,30 @@ public class DBManager {
+ 		session.close();
+ 		return r;
+ 	}
++	
++	public static List<ContentReviewVO> findAllReview(int product_no){
++		SqlSession session = factory.openSession();
++		List<ContentReviewVO> list = session.selectList("review.findAllReview", product_no);
++		session.close();
++		return list;
++	}
++	
++	public static int review_getNextNo() {
++		SqlSession session = factory.openSession();
++		int review_no = session.selectOne("review.getNextNo");
++		session.close();
++		return review_no;
++	}
++	
++	public static int defaultReview(ReviewVO r) {
++		SqlSession session = factory.openSession();
++		int re= session.insert("review.defaultReview", r);
++		session.commit();
++		session.close();
++		return re;
++	}
++	
++	
+ 
+ 	
+ 	//==============================================
+@@ -207,24 +246,18 @@ public class DBManager {
+ 		return re;
+ 	}
+ 	
+-	public static HashMap findId(String cust_name, String cust_phone) {
++	public static String findId(HashMap map) {
+ 		SqlSession session = factory.openSession();
+-		HashMap map = new HashMap();
+-		map.put("cust_name", cust_name);
+-		map.put("cust_phone", cust_phone);
+-		session.selectOne("customer.findId",map);
++		String cust_id = session.selectOne("customer.findId",map);
+ 		session.close();
+-		return map;
++		return cust_id;
+ 	}
+ 	
+-	public static HashMap findPwd(String cust_id, String cust_phone) {
++	public static String findPwd(HashMap map) {
+ 		SqlSession session = factory.openSession();
+-		HashMap map = new HashMap();
+-		map.put("cust_id", cust_id);
+-		map.put("cust_phone", cust_phone);
+-		session.selectOne("customer.findId",map);
++		String cust_pwd = session.selectOne("customer.findPwd",map);
+ 		session.close();
+-		return map;
++		return cust_pwd;
+ 	}
+ 	
+ 	public static CustomerVO detailCustomer(String cust_id) {
+@@ -249,12 +282,27 @@ public class DBManager {
+ 		return c;
+ 	}
+ 	
++
+ 	public static String getRole(String cust_id) {
+ 		SqlSession session = factory.openSession();
+ 		String role = session.selectOne("customer.getRole",cust_id);
+ 		session.close();
+ 		return role;
+ 	}
++	public static int mypageMain(String cust_id) {
++		SqlSession session = factory.openSession();
++		int re = session.selectOne("customer.mypage_login",cust_id);
++		session.close();
++		return re;
++
++	}
++	
++	public static String getEmail(String cust_id) {
++		SqlSession session = factory.openSession();
++		String email = session.selectOne("customer.getEmail",cust_id);
++		session.close();
++		return email;
++	}
+ 	
+ 	//===================================================
+ 	//qna
+@@ -305,12 +353,18 @@ public class DBManager {
+ 		return re;
+ 	}
+ 	
+-	public static int updateQna_answer(String qna_answer, int qna_no) {
++
++	public static List<ListQnaVO> findAllQna(int product_no){
+ 		SqlSession session = factory.openSession();
+-		HashMap map = new HashMap();
+-		map.put("qna_answer", qna_answer);
+-		map.put("qna_no", qna_no);
+-		int re=session.update("qna.update_answer",map);
++		List<ListQnaVO> list = session.selectList("qna.findAllQna", product_no);
++		session.close();
++		return list;
++	}
++	
++	public static int updateQna_answer(QnaVO q) {
++		SqlSession session = factory.openSession();
++		int re=session.update("qna.updateQna_answer",q);
++		session.commit();
+ 		session.close();
+ 		return re;
+ 	}
+@@ -369,7 +423,20 @@ public class DBManager {
+ 		return re;
+ 	}
+ 	
+-
++	public static int getOrder_count() {
++		SqlSession session = factory.openSession();
++		int re= session.selectOne("customer_order.getOrder_count");
++		session.close();
++		return re;
++	}
++	
++	public static int order_getNextNo() {
++		SqlSession session = factory.openSession();
++		int order_no = session.selectOne("customer_order.getNextNo");
++		session.close();
++		return order_no;
++	}
++	
+ 
+ 
+ 	
+@@ -398,6 +465,13 @@ public class DBManager {
+ 		return re;
+ 	}
+ 	
++	public static int orderdetail_getNextNo() {
++		SqlSession session = factory.openSession();
++		int detail_no = session.selectOne("customerOrder_detail.getNextNo");
++		session.close();
++		return detail_no;
++	}
++	
+ 	//===========================================
+ 	//customerOrder_refund
+ 	
+@@ -420,9 +494,9 @@ public class DBManager {
+ 		return re;
+ 	}
+ 	
+-	public static List<CartProductVO> cartProduct(){
++	public static List<CartProductVO> cartProduct(String cust_id){
+ 		SqlSession session = factory.openSession();
+-		List<CartProductVO> list= session.selectList("cart.cartProduct");
++		List<CartProductVO> list= session.selectList("cart.cartProduct",cust_id);
+ 		session.close();
+ 		return list;
+ 	}
+@@ -451,7 +525,22 @@ public class DBManager {
+ 		return cp;
+ 	}
+ 	
++	public static int cartGetNextNo() {
++		SqlSession session = factory.openSession();
++		int re = session.selectOne("cart.cartGetNextNo");
++		session.close();
++		return re;
++	}
+ 	
++	public static int findByProduct(String cust_id,int product_no) {
++		SqlSession session = factory.openSession();
++		HashMap map = new HashMap();
++		map.put("cust_id",cust_id);
++		map.put("product_no",product_no);
++		int re = session.selectOne("cart.findByProduct",map );
++		session.close();
++		return re;
++	}
+ 	
+ 
+ 	
+diff --git a/final_Project/src/main/java/com/example/demo/db/customerMapper.xml b/final_Project/src/main/java/com/example/demo/db/customerMapper.xml
+index fdd9a2e..aa2e77a 100644
+--- a/final_Project/src/main/java/com/example/demo/db/customerMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/customerMapper.xml
+@@ -43,4 +43,12 @@
+   	select role from customer where cust_id=#{cust_id}
+    </select>
+   
++  <select id="mypage_login" resultType="java.lang.Integer">
++  	select cust_pwd from customer where cust_id=#{cust_id}
++  </select>
++  
++  <select id="getEmail" resultType="java.lang.String">
++  	select cust_email from customer where cust_id=#{cust_id}
++  </select>
++
+ </mapper>
+\ No newline at end of file
+diff --git a/final_Project/src/main/java/com/example/demo/db/customerOrder_detailMapper.xml b/final_Project/src/main/java/com/example/demo/db/customerOrder_detailMapper.xml
+index effea92..7860368 100644
+--- a/final_Project/src/main/java/com/example/demo/db/customerOrder_detailMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/customerOrder_detailMapper.xml
+@@ -5,7 +5,7 @@
+ <mapper namespace="customerOrder_detail">
+ 
+ 	<insert id="insertCustomerOrder_detail" parameterType="customerOrder_detailVO">
+-     insert into customerOrder_detail(detail_no,order_no,product_no,detail_price,detail_cnt) values(#{detail_no},#{order_no},#{product_no},#{detail_price},#{detail_cnt});
++     insert into customerOrder_detail(detail_no,order_no,product_no,detail_price,detail_cnt) values(#{detail_no},#{order_no},#{product_no},#{detail_price},#{detail_cnt})
+  	</insert>
+ 	
+    <select id="getNextNo" resultType="java.lang.Integer">
+@@ -13,9 +13,10 @@
+   </select>
+   
+   <select id="listDetail" resultType="ListDetailVO">
+-  	select o.order_no, product_img, product_name,product_price, detail_cnt, status_code, detail_price, payment_code, cust_name, cust_phone, cust_addr1, cust_addr2, cust_addr3 
+-	from customer c, product p, customerOrder_detail d, customer_order o 
+-	where o.cust_id=c.cust_id and d.product_no=p.product_no and o.order_no=d.order_no and o.order_no=#{order_no}
++  	select o.order_no, product_img, product_name,product_price, detail_cnt, status_name,  
++	detail_price, payment_name, cust_name, cust_phone, cust_addr1, cust_addr2, cust_addr3  
++	from customer c, product p, customerOrder_detail d, customer_order o, status_type s, payment p 
++	where p.payment_code=o.payment_code and s.status_code=o.status_code and o.cust_id=c.cust_id and d.product_no=p.product_no and o.order_no=d.order_no and o.order_no=#{order_no}
+   </select>
+   
+   <select id="totalDetail" resultType="java.lang.Integer">
+diff --git a/final_Project/src/main/java/com/example/demo/db/customer_orderMapper.xml b/final_Project/src/main/java/com/example/demo/db/customer_orderMapper.xml
+index a083eb6..6f6340b 100644
+--- a/final_Project/src/main/java/com/example/demo/db/customer_orderMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/customer_orderMapper.xml
+@@ -4,7 +4,7 @@
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="customer_order">
+   <select id="listOrder" resultType="ListOrderVO">
+-  	select order_date, order_no, status_code from customer_order where cust_id=#{cust_id}
++  	select order_date, order_no, status_name from customer_order o, status_type s where s.status_code=o.status_code and cust_id=#{cust_id} order by order_date desc
+   </select>
+   
+   <select id="orderCancelPage" resultType="OrderCancelVO">
+@@ -24,4 +24,12 @@
+    <insert id="insertCustomer_order" parameterType="customer_orderVO">
+   	insert into customer_order(order_no,cust_id,order_date,order_addr1,order_addr2,order_addr3,status_code,payment_code) values(#{order_no},#{cust_id},sysdate,#{order_addr1},#{order_addr2},#{order_addr3},0,#{payment_code})
+   </insert>
++  
++  <select id="getOrder_count" resultType="java.lang.Integer">
++  	select count(*) from customer_order
++  </select>
++  
++  <select id="getNextNo" resultType="java.lang.Integer">
++ 	select nvl(max(order_no),0)+1 from customer_order
++  </select>
+ </mapper>
+\ No newline at end of file
+diff --git a/final_Project/src/main/java/com/example/demo/db/productMapper.xml b/final_Project/src/main/java/com/example/demo/db/productMapper.xml
+index a7fd155..e20985a 100644
+--- a/final_Project/src/main/java/com/example/demo/db/productMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/productMapper.xml
+@@ -5,13 +5,32 @@
+ <mapper namespace="product">
+   <select id="listProduct" resultType="productVO">
+     select product_no,product_img,product_name,product_price from 
+-   (select rownum num,product_no,product_img,product_name,product_price from 
+-   (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} order by product_date desc)) 
++    (select rownum num,product_no,product_img,product_name,product_price from 
++    (select product_no,product_img,product_name,product_price from product where category_code=#{category_code} 
++    <if test="orderType != null">
++        order by ${orderType} 
++    </if>
++    <if test="orderType == null">
++        order by  product_date desc 
++    </if>
++    )) 
+ 	where num between #{start} and #{end} 
+   </select>
+   
+   <select id="getTotalRecord" resultType="java.lang.Integer">
+   	select count(*) from product where category_code=#{category_code}
++  </select>
++  
++  <select id="recentProduct" resultType="productVO">
++  	select product_no,product_img,product_name,product_price from 
++  	(select product_no,product_img,product_name,product_price from product order by product_date desc) where rownum &lt;= 30 
++  	<if test="orderType != null">
++  		order by ${orderType}
++  	</if>
++  </select>
++  
++  <select id="detailProduct" resultType="productVO">
++  	select product_img,product_desc,product_name,product_price,product_detail from product where product_no=#{product_no}
+   </select>    
+   
+   <!-- admin -->
+@@ -20,8 +39,8 @@
+    (select rownum num,product_no,category_code,product_name from 
+    (select product_no,category_code,product_name from product order by product_no desc)) 
+ 	where num between #{start} and #{end} 
+-  </select>
+-  
++  </select> 
++
+   <select id="mgr_getTotalRecord" resultType="java.lang.Integer">
+   	select count(*) from product
+   </select> 
+diff --git a/final_Project/src/main/java/com/example/demo/db/qnaMapper.xml b/final_Project/src/main/java/com/example/demo/db/qnaMapper.xml
+index 1a131c9..17dbf76 100644
+--- a/final_Project/src/main/java/com/example/demo/db/qnaMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/qnaMapper.xml
+@@ -20,12 +20,17 @@
+   </select>
+   
+   <select id="listQna" resultType="qnaVO">
+-	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d, customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no and o.cust_id=#{cust_id}
++	select q.qna_no, d.detail_no, q.qna_title, q.qna_date from qna q, customerOrder_detail d, customer_order o where q.detail_no=d.detail_no and o.order_no=d.order_no and o.cust_id=#{cust_id} order by q.qna_date desc
+   </select>
+   
+   <insert id="insertQna" parameterType="qnaVO">
+   	insert into qna (qna_no, detail_no, qna_title, qna_content, qna_img,qna_date, qna_answer) values(#{qna_no},#{detail_no},#{qna_title},#{qna_content},#{qna_img},sysdate,null)
+   </insert>
++ 
++  <select id="findAllQna" resultType="listQnaVO">
++  	select qna_title,qna_content,qna_img,qna_answer,qna_date,cust_id from qna q,customerorder_detail d,customer_order o 
++	where q.detail_no = d.detail_no and d.order_no = o.order_no and product_no=#{product_no} order by qna_date desc
++  </select>
+ 
+    <update id="updateQna_answer" parameterType="qnaVO">
+   update qna set qna_answer=#{qna_answer} where qna_no=#{qna_no}
+@@ -36,7 +41,7 @@
+   </select>
+   
+    <select id="mgr_detailQna" resultType="qnaVO">
+-	select detail_no, qna_title, qna_content, qna_img, qna_date from qna where qna_no=#{qna_no}
++	select qna_no, detail_no, qna_title, qna_content, qna_img, qna_date, qna_answer from qna where qna_no=#{qna_no}
+   </select>
+   
+ </mapper>
+\ No newline at end of file
+diff --git a/final_Project/src/main/java/com/example/demo/db/reviewMapper.xml b/final_Project/src/main/java/com/example/demo/db/reviewMapper.xml
+index a3b9caf..84f51a9 100644
+--- a/final_Project/src/main/java/com/example/demo/db/reviewMapper.xml
++++ b/final_Project/src/main/java/com/example/demo/db/reviewMapper.xml
+@@ -29,4 +29,17 @@
+   <select id="findByNo" resultType="reviewVO">
+   	select * from review where review_no=#{review_no}
+   </select>
++  
++  <select id="findAllReview" resultType="contentReviewVO">
++  	select review_title,review_content,review_img,cust_id from review r,customerorder_detail d,customer_order o 
++	where r.detail_no = d.detail_no and d.order_no = o.order_no and product_no=#{product_no} and review_code=1 order by review_no desc
++  </select>
++  
++  <select id="getNextNo" resultType="java.lang.Integer">
++ 	select nvl(max(review_no),0)+1 from review
++  </select>
++  
++  <insert id="defaultReview" parameterType="ReviewVO">
++ 	insert into review(review_no,review_code,detail_no,review_title,review_content,review_img) values(#{review_no},0,#{detail_no},null,null,null)
++  </insert>
+ </mapper>
+\ No newline at end of file
+diff --git a/final_Project/src/main/java/com/example/demo/db/sqlMapConfig.xml b/final_Project/src/main/java/com/example/demo/db/sqlMapConfig.xml
+index 30dfdde..7cddb1d 100644
+--- a/final_Project/src/main/java/com/example/demo/db/sqlMapConfig.xml
++++ b/final_Project/src/main/java/com/example/demo/db/sqlMapConfig.xml
+@@ -11,6 +11,7 @@
+   	<typeAlias type="com.example.demo.vo.ContentReviewVO" alias="contentReviewVO"/>
+   	<typeAlias type="com.example.demo.vo.CustomerVO" alias="customerVO"/>
+   	<typeAlias type="com.example.demo.vo.QnaVO" alias="qnaVO"/>
++  	<typeAlias type="com.example.demo.vo.ListQnaVO" alias="listQnaVO"/>
+   	<typeAlias type="com.example.demo.vo.MonthTotalVO" alias="monthTotalVO"/>
+   	<typeAlias type="com.example.demo.vo.Customer_orderVO" alias="customer_orderVO"/>
+   	<typeAlias type="com.example.demo.vo.CustomerOrder_detailVO" alias="customerOrder_detailVO"/>
+diff --git a/final_Project/src/main/java/com/example/demo/vo/CartVO.java b/final_Project/src/main/java/com/example/demo/vo/CartVO.java
+index f18fe48..6b4d70b 100644
+--- a/final_Project/src/main/java/com/example/demo/vo/CartVO.java
++++ b/final_Project/src/main/java/com/example/demo/vo/CartVO.java
+@@ -1,8 +1,12 @@
+ package com.example.demo.vo;
+ 
++import lombok.AllArgsConstructor;
+ import lombok.Data;
++import lombok.NoArgsConstructor;
+ 
+ @Data
++@AllArgsConstructor
++@NoArgsConstructor
+ public class CartVO {
+ 	private int cart_no;
+ 	private int product_cnt;
+diff --git a/final_Project/src/main/java/com/example/demo/vo/ContentReviewVO.java b/final_Project/src/main/java/com/example/demo/vo/ContentReviewVO.java
+index 1a145cd..4b07f0b 100644
+--- a/final_Project/src/main/java/com/example/demo/vo/ContentReviewVO.java
++++ b/final_Project/src/main/java/com/example/demo/vo/ContentReviewVO.java
+@@ -10,4 +10,5 @@ public class ContentReviewVO {
+ 	private String review_title;
+ 	private String review_content;
+ 	private String review_img;
++	private String cust_id;
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/vo/Customer_orderVO.java b/final_Project/src/main/java/com/example/demo/vo/Customer_orderVO.java
+index d24a6b3..a6f41db 100644
+--- a/final_Project/src/main/java/com/example/demo/vo/Customer_orderVO.java
++++ b/final_Project/src/main/java/com/example/demo/vo/Customer_orderVO.java
+@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
+ @AllArgsConstructor
+ @NoArgsConstructor
+ public class Customer_orderVO {
+-
++	//int로 하면 범위를 넘어섬
+ 	private int order_no;
+ 	private String cust_id;	
+ 	private Date order_date;	
+diff --git a/final_Project/src/main/java/com/example/demo/vo/ListDetailVO.java b/final_Project/src/main/java/com/example/demo/vo/ListDetailVO.java
+index 99221fc..c08b40a 100644
+--- a/final_Project/src/main/java/com/example/demo/vo/ListDetailVO.java
++++ b/final_Project/src/main/java/com/example/demo/vo/ListDetailVO.java
+@@ -15,9 +15,9 @@ public class ListDetailVO {
+ 	private String product_name;	
+ 	private int product_price;	
+ 	private int detail_cnt;	
+-	private int status_code;	
++	private String status_name;	
+ 	private int detail_price;	
+-	private int payment_code;	
++	private String payment_name;	
+ 	private String cust_name;	
+ 	private String cust_phone;	
+ 	private String cust_addr1;	
+diff --git a/final_Project/src/main/java/com/example/demo/vo/ListOrderVO.java b/final_Project/src/main/java/com/example/demo/vo/ListOrderVO.java
+index 031f4bb..ba8960d 100644
+--- a/final_Project/src/main/java/com/example/demo/vo/ListOrderVO.java
++++ b/final_Project/src/main/java/com/example/demo/vo/ListOrderVO.java
+@@ -13,5 +13,5 @@ public class ListOrderVO {
+ 
+ 	private Date order_date;	
+ 	private int order_no;	
+-	private int status_code;	
++	private String status_name;	
+ }
+diff --git a/final_Project/src/main/java/com/example/demo/vo/ListQnaVO.java b/final_Project/src/main/java/com/example/demo/vo/ListQnaVO.java
+new file mode 100644
+index 0000000..273968a
+--- /dev/null
++++ b/final_Project/src/main/java/com/example/demo/vo/ListQnaVO.java
+@@ -0,0 +1,15 @@
++package com.example.demo.vo;
++
++import java.util.Date;
++
++import lombok.Data;
++
++@Data
++public class ListQnaVO {
++	private String qna_title;
++	private String qna_content;
++	private String qna_img;
++	private Date qna_date;
++	private String qna_answer;
++	private String cust_id;
++}
+diff --git a/final_Project/src/main/java/com/example/demo/vo/OrderCommitVO.java b/final_Project/src/main/java/com/example/demo/vo/OrderCommitVO.java
+new file mode 100644
+index 0000000..62e8cf5
+--- /dev/null
++++ b/final_Project/src/main/java/com/example/demo/vo/OrderCommitVO.java
+@@ -0,0 +1,20 @@
++package com.example.demo.vo;
++
++import lombok.Data;
++
++@Data
++public class OrderCommitVO {
++	private int product_no;
++	private String product_img;
++	private int product_cnt;   
++	private String cust_id;       
++	private int cart_no;       
++	private String product_name;  
++	private int product_price; 
++	private String name;
++	private String phone;
++	private  String sample6_postcode;
++	private String sample6_address;
++	private String sample6_detailAddress;
++	private int payment_code;
++}
+diff --git a/final_Project/src/main/resources/application.properties b/final_Project/src/main/resources/application.properties
+index 47b29c2..f31c656 100644
+--- a/final_Project/src/main/resources/application.properties
++++ b/final_Project/src/main/resources/application.properties
+@@ -5,10 +5,6 @@ spring.datasource.data-password=bbox1234
+ 
+ #server.port=8088
+ #server.session.timeout=36000
+-<<<<<<< HEAD
+-#
+-=======
+ 
+->>>>>>> branch 'develop' of https://github.com/envayu/final_Project.git
+ spring.mvc.view.prefix=/WEB-INF/views/
+ spring.mvc.view.suffix=.jsp
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/adminMain.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/adminMain.jsp
+index 5581240..a1ed32e 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/adminMain.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/adminMain.jsp
+@@ -5,6 +5,7 @@
+ <head>
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ <h2>������ ������</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/category_sale.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/category_sale.jsp
+new file mode 100644
+index 0000000..ebd6896
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/category_sale.jsp
+@@ -0,0 +1,75 @@
++<%@ page language="java" contentType="text/html; charset=EUC-KR"
++    pageEncoding="EUC-KR"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="EUC-KR">
++<title>Insert title here</title>
++<script type="text/javascript"
++	src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++</head>
++<body>
++
++      <h1>ī�װ����� �Ǹŷ�</h1>
++      <select id="category_code">
++        <option value="sp">��, �</option>
++        <option value="d">����</option>
++        <option value="s">������</option>
++        <option value="n">���</option>
++        <option value="r">��,��</option>
++        <option value="b">����Ŀ��</option>
++        <option value="v">���</option>
++      </select>
++      <input type="submit" value="Ȯ��" onclick='Show_Category();'><br>
++      
++      <div id="cate_list">
++      
++      </div>
++
++    
++    <script>
++    	function Show_Category(category_code) {
++    	var category_code =$("#category_code option:selected").attr('value');
++    		$.ajax({
++    			url: "category_sale",
++    			data: "category_code=" + category_code,
++    			dataType: "JSON",
++    			cache: false,
++    			async: true,
++    			type: "POST",
++    			success: function(obj) {
++    				Show_CategoryCallback(obj);
++    			},
++    			error: function(xhr, status, error) { }
++
++    		});
++    	}
++    
++    function Show_CategoryCallback(obj) {
++    	var count = obj.length;
++    	console.log(obj);
++    	if (obj != null) {
++    		console.log("callback success");
++    		for (var index = 0; index < count; index++) {
++    			obj[index].product_no;
++    			obj[index].product_name;
++    			
++    			var data = new Object();
++    			data.product_no= obj[index].product_no;
++    			data.product_name= obj[index].product_name;
++    			
++    			document.body.append(data.product_no); 
++    			document.body.append(data.product_name); 
++    		}
++    	}
++    }
++    </script>
++    
++    
++
++
++    
++    
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailProduct.jsp
+index cefb0a5..e4792b2 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailProduct.jsp
+@@ -6,6 +6,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>상품상세</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailQna.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailQna.jsp
+index 06a21d5..344eda2 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailQna.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_detailQna.jsp
+@@ -7,17 +7,20 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>1:1문의 상세</h2>
+ 	<br>
+ 	번호 ${q.qna_no}<br>
+ 	제목  ${q.qna_title }<br>
++	작성일자 ${q.qna_date}<br>
+ 	주문번호  ${q.detail_no}<br>
+ 	문의 내용 <textarea rows="10" cols="80" readonly="readonly">${q.qna_content }</textarea><br>
+-	첨부파일  <img src="../images/${q.qna_img }" width="100" height="100"> <br>
++	첨부파일  <img src="/images/${q.qna_img}" width="100" height="100"><br>
++	<hr>
+ 	답글 		<textarea rows="10" cols="80" readonly="readonly">${q.qna_answer }</textarea><br>
+-	<a href="mgr_updateQna?qna_no=${q.qna_no }">답글달기</a>
++	<a href="updateQna_answer?qna_no=${q.qna_no }">답글달기</a>
+ 	<a href="mgr_listQna">목록</a>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_insertProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_insertProduct.jsp
+index 2688123..1addc79 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_insertProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_insertProduct.jsp
+@@ -6,6 +6,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>상품등록</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listProduct.jsp
+index effe01e..617aadb 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listProduct.jsp
+@@ -7,6 +7,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>상품목록</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listQna.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listQna.jsp
+index 33ccff3..c405e6e 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listQna.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_listQna.jsp
+@@ -8,6 +8,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>1:1 문의</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_updateProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_updateProduct.jsp
+index 43180bf..86352ff 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_updateProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/mgr_updateProduct.jsp
+@@ -6,6 +6,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>상품수정</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/admin/updateQna_answer.jsp b/final_Project/src/main/webapp/WEB-INF/views/admin/updateQna_answer.jsp
+index ae5a478..6749dfb 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/admin/updateQna_answer.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/admin/updateQna_answer.jsp
+@@ -7,17 +7,24 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>1:1문의 상세</h2>
+ 	<br>
++	<form action="updateQna_answer" method="post">
++	 <input type="hidden" name="qna_no" value="${q.qna_no }">
++	 <input type="hidden" name="qna_title" value="${q.qna_title }">
++	 <input type="hidden" name="detail_no" value="${q.detail_no }">
+ 	번호 ${q.qna_no}<br>
+ 	제목  ${q.qna_title }<br>
+ 	주문번호  ${q.detail_no}<br>
+-	문의 내용 <textarea rows="10" cols="80" readonly="readonly">${q.qna_content }</textarea><br>
+-	첨부파일  <img src="../images/${q.qna_img }" width="100" height="100"> <br>
++	문의 내용 <textarea rows="10" cols="80" name="qna_content" readonly="readonly">${q.qna_content }</textarea><br>
++	첨부파일  <img src="/images/${q.qna_img }" width="100" height="100"><br>
+ 	답글 		<textarea rows="10" cols="80" name="qna_answer">${q.qna_answer }</textarea><br>
+-	<input type="reset" value="취소">
++	
+ 	<input type="submit" value="확인">
++	<input type="reset" value="취소">
++	</form>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/common/error.jsp b/final_Project/src/main/webapp/WEB-INF/views/common/error.jsp
+index 4aae0ea..a6b2830 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/common/error.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/common/error.jsp
+@@ -3,8 +3,9 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>${msg }</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/common/header.jsp b/final_Project/src/main/webapp/WEB-INF/views/common/header.jsp
+index c102a7e..4dd9a77 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/common/header.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/common/header.jsp
+@@ -1,33 +1,56 @@
+ <%@ page language="java" contentType="text/html; charset=UTF-8"
+     pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/header.css" type="text/css">
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+-	<div class="header">
+-		<section class="user-area"></section>	<!-- 로그인에 따라 바뀌는 곳 -->
++	<div id="header">
++		<section id="user-area">
++		<!-- 로그인에 따라 바뀌는 곳 -->
++			<c:choose>
++				<c:when test="${not empty member }">
++					<ul class="list-menu">
++						<li>${member.cust_name }보글님</li>
++						<li><a href="/mypage/listReviewWrite">마이페이지</a></li>
++						<li><a href="/logout">로그아웃</a></li>
++					</ul>
++				</c:when>
++				<c:otherwise>
++					<ul class="list-menu">
++						<li><a href="/insertCustomer">회원가입</a></li>
++						<li><a href="/login">로그인</a></li>
++					</ul>
++				</c:otherwise>
++			</c:choose>
++		</section>
+ 		<div class="header_inner">
+ 			<div class="header_sec">
+ 				<h1 class="logo">
+-					<a href="/main"><img src="/images/BoggleBox_logo.jpg"></a>
++					<a href="/main"><img src="/images/BoggleBox_logo.jpg" style="width: 130px; height: 70px;"></a>
+ 				</h1>
+ 				<div class="nb">
+ 					<ul class="nb_list">
+-						<li><a href="market/listProduct?category_code=sp">카테고리</a>
+-							<ul class="drop-down">
+-								<li><a href="/market/listProduct?category_code=sp">국,찌개</a></li>
+-								<li><a href="/market/listProduct?category_code=d">반찬</a></li>
+-								<li><a href="/market/listProduct?category_code=s">샐러드</a></li>
+-								<li><a href="/market/listProduct?category_code=n">면류</a></li>
+-								<li><a href="/market/listProduct?category_code=r">밥,죽</a></li>
+-								<li><a href="/market/listProduct?category_code=b">베이커리</a></li>
+-								<li><a href="/market/listProduct?category_code=v">비건</a></li>
+-							</ul>
++						<li class="menu1">
++							<a href="/market/listProduct?category_code=sp"><img src="/images/icon_nb.jpg">카테고리</a>
++							<div id="sub-menu">
++								<ul>
++									<li><a href="/market/listProduct?category_code=sp">국,찌개</a></li>
++									<li><a href="/market/listProduct?category_code=d">반찬</a></li>
++									<li><a href="/market/listProduct?category_code=s">샐러드</a></li>
++									<li><a href="/market/listProduct?category_code=n">면류</a></li>
++									<li><a href="/market/listProduct?category_code=r">밥,죽</a></li>
++									<li><a href="/market/listProduct?category_code=b">베이커리</a></li>
++									<li><a href="/market/listProduct?category_code=v">비건</a></li>
++								</ul>
++							</div>
+ 						</li>
+-						<li><a href="#">신제품</a></li>
++						<li class="menu2"><a href="/market/recentProduct">신제품</a></li>
+ 					</ul>
+ 				</div>
+ 				<div></div>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/error.jsp b/final_Project/src/main/webapp/WEB-INF/views/error.jsp
+new file mode 100644
+index 0000000..4aae0ea
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/error.jsp
+@@ -0,0 +1,12 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="EUC-KR">
++<title>Insert title here</title>
++</head>
++<body>
++	<h2>${msg }</h2>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/find_id.jsp b/final_Project/src/main/webapp/WEB-INF/views/find_id.jsp
+index 23703af..e2b08d4 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/find_id.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/find_id.jsp
+@@ -10,12 +10,13 @@
+ 	<h2>아이디 찾기</h2>
+ 	<hr>
+ 	<h3>휴대폰 인증</h3>
++	
+ 	<form action="find_id" method="post">
+-		이름 : <br>
++		이름 <br>
+ 		<input type="text" placeholder="이름을 입력해주세요" name="cust_name"><br>
+-		휴대폰번호 : <br>
+-		<input type="tel" placeholder="휴대폰 번호를 입력해주세요" name="cust_phone"><br>
+-		<input type="submit" value="인증번호 받기">
++		휴대폰번호  <br>
++		<input type="text" placeholder="휴대폰 번호를 입력해주세요" name="cust_phone"><br>
++		<input type="submit" value="아이디찾기">
+ 	</form>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/find_idOK.jsp b/final_Project/src/main/webapp/WEB-INF/views/find_idOK.jsp
+new file mode 100644
+index 0000000..10a9b95
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/find_idOK.jsp
+@@ -0,0 +1,16 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++</head>
++<body>
++	${msg }
++	<a href="main">메인으로 가기</a>
++	<a href="/mypage/listQna">qna 가기</a>
++	<a href="/mypage/updateCustomer">개인정보수정</a><br>
++	<a href="logout">logout</a>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/find_pwd.jsp b/final_Project/src/main/webapp/WEB-INF/views/find_pwd.jsp
+index fe7e6f4..9f0a540 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/find_pwd.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/find_pwd.jsp
+@@ -10,12 +10,13 @@
+ 	<h2>비밀번호 찾기</h2>
+ 	<hr>
+ 	<h3>휴대폰 인증</h3>
++	
+ 	<form action="find_pwd" method="post">
+-		아이디 : <br>
+-		<input type="text" placeholder="아이디를 입력해주세요" name="cust_name"><br>
+-		휴대폰번호 : <br>
+-		<input type="tel" placeholder="휴대폰 번호를 입력해주세요" name="cust_phone"><br>
+-		<input type="submit" value="인증번호 받기">
++		아이디 <br>
++		<input type="text" placeholder="아이디를 입력해주세요" name="cust_id"><br>
++		휴대폰번호  <br>
++		<input type="text" placeholder="휴대폰 번호를 입력해주세요" name="cust_phone"><br>
++		<input type="submit" value="비밀번호찾기">
+ 	</form>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/find_pwdOK.jsp b/final_Project/src/main/webapp/WEB-INF/views/find_pwdOK.jsp
+new file mode 100644
+index 0000000..10a9b95
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/find_pwdOK.jsp
+@@ -0,0 +1,16 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++</head>
++<body>
++	${msg }
++	<a href="main">메인으로 가기</a>
++	<a href="/mypage/listQna">qna 가기</a>
++	<a href="/mypage/updateCustomer">개인정보수정</a><br>
++	<a href="logout">logout</a>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/insertCustomer.jsp b/final_Project/src/main/webapp/WEB-INF/views/insertCustomer.jsp
+index 1e01c55..a26fcb9 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/insertCustomer.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/insertCustomer.jsp
+@@ -5,10 +5,14 @@
+ <head>
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+-<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+ <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
++<link rel="stylesheet" href="../resources/css/insertCustomer.css" type="text/css">
++<link rel="preconnect" href="https://fonts.googleapis.com">
++<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
++<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+ <script type="text/javascript">
+-	function kakaopost() {
++	function kakaopost() { 
+ 	    new daum.Postcode({
+ 	        oncomplete: function(data) {
+ 	           document.querySelector("#cust_addr1").value = data.zonecode;
+@@ -35,100 +39,138 @@
+ 		}
+ 	}
+ 	
+-	function idCheck() {
+-		if(document.joinForm.cust_id.value == "" || document.joinForm.cust_id.value.length < 0){
+-			alert("아이디를 먼저 입력해 주세요")
+-			document.loginForm.cust_id.focus();
+-		}else{
+-			//2. 회원정보아이디를 가지고 있는 지 체크하려면 DB에 접근해야한다.
+-			//자바스크립트로 어떻게 DB에 접근할까? => 파라미터로 id값을 가져가서 jsp페이지에서 진행하면 된다.
+-			window.open("joinIdCheck.jsp?cust_id="+document.joinForm.cust_id.value,"","width=500, height=300");
+-		}
+-	}
+-	
+-	function checkId(){
+-        var id = $('#id').val(); //id값이 "id"인 입력란의 값을 저장
+-        $.ajax({
+-            url:'/user/idCheck', //Controller에서 인식할 주소
+-            type:'post', //POST 방식으로 전달
+-            data:{id:id},
+-            success:function(){
+-                console.log("처리 성공 시 변경되는 내용");
+-            },
+-            error:function(){
+-                alert("에러입니다");
+-            }
+-        });
+-    };
+-    
+- // 아이디 유효성 검사(1 = 중복 / 0 != 중복)
+-	$("#cust_id").blur(function() {
+-		// id = "id_reg" / name = "userId"
+-		var user_id = $('#cust_id').val();
+-		$.ajax({
+-			url : '${pageContext.request.contextPath}/user/idCheck?cust_id='+ cust_id,
+-			type : 'get',
+-			success : function(data) {
+-				console.log("1 = 중복o / 0 = 중복x : "+ data);							
+-				
+-				if (data == 1) {
+-						// 1 : 아이디가 중복되는 문구
+-						$("#id_check").text("사용중인 아이디입니다 :p");
+-						$("#id_check").css("color", "red");
+-						$("#reg_submit").attr("disabled", true);
+-					} else {
+-						
+-						if(idJ.test(user_id)){
+-							// 0 : 아이디 길이 / 문자열 검사
+-							$("#id_check").text("");
+-							$("#reg_submit").attr("disabled", false);
+-				
+-						} else if(user_id == ""){
+-							
+-							$('#id_check').text('아이디를 입력해주세요 :)');
+-							$('#id_check').css('color', 'red');
+-							$("#reg_submit").attr("disabled", true);				
+-							
+-						} else {
+-							
+-							$('#id_check').text("아이디는 소문자와 숫자 4~12자리만 가능합니다 :) :)");
+-							$('#id_check').css('color', 'red');
+-							$("#reg_submit").attr("disabled", true);
+-						}
+-						
+-					}
+-				}, error : function() {
+-						console.log("실패");
+-				}
+-			});
++	$(function () {
++		$('#btnCheck').click(function () {
++		    if ($('#cust_id').val() != '') {
++		        $.ajax({
++		   					
++		            type: 'GET',
++		            url: '/idCheck',
++		            data: 'cust_id=' + $('#cust_id').val(),
++		            dataType: 'json',
++		            success: function(result) {
++		                if (result == 0) {
++		                    $('#result').text('사용 가능한 아이디입니다.');
++		                } else {
++		                    $('#result').text('이미 사용중인 아이디입니다.');
++		                }
++		            }	
++		        });
++		   				
++		    } else {
++		        alert('아이디를 입력하세요.');
++		        $('#cust_id').focus();
++		    }
++		   			
+ 		});
++		
++		$('#btnCheck2').click(function () {
++		    if ($('#cust_email').val() != '') {
++		        $.ajax({
++		   					
++		            type: 'GET',
++		            url: '/emailCheck',
++		            data: 'cust_email=' + $('#cust_email').val(),
++		            dataType: 'json',
++		            success: function(result) {
++		                if (result == 0) {
++		                    $('#emailCheck').text('사용 가능한 이메일입니다.');
++		                } else {
++		                    $('#emailCheck').text('이미 사용중인 이메일입니다.');
++		                }
++		            }	
++		        });
++		   				
++		    } else {
++		        alert('이메일을 입력하세요.');
++		        $('#cust_email').focus();
++		    }
++		   			
++		});
++	});
++	
++	
++		
++	
+ </script>
+ </head>
+ <body>
+-	<h2>회원가입</h2>
+-	<h4>*필수입력사항</h4>
+-	<hr>
+-	<form action="insertCustomer" method="post" name="joinForm">
+-		아이디* : <input type="text" placeholder="6자 이상의 영문 혹은 숫자를 조합" name="cust_id" id="cust_id" size="27">
+-				<!-- <input type="button" onclick="idCheck()" value="중복확인"><br> -->
+-				<div id="id_check"></div>
+-		비밀번호* : <input type="password" placeholder="비밀번호를 입력해주세요" name="cust_pwd" id="cust_pwd" size="27"><br>
+-		
+-		비밀번호확인* : <input type="password" placeholder="비밀번호를 한번 더 입력해주세요" name="cust_pwd_ck" id="cust_pwd_ck" onkeyup="passConfirm()" size="27"> <span id ="confirmMsg"></span><br>
+-		
+-		이름* : <input type="text" placeholder="이름을 입력해주세요" name="cust_name" size="27"><br>
++<!-- 이름줄때 앞에 join_ 붙이기 -->
++	<div class="join_container">
++		<div id="join_title">
++			<h2>회원가입</h2>
++		</div>
++		<div id="join_essential">
++			<label class="join_8">*</label>필수입력사항
++		</div>
++		<hr width="1000px">
+ 		
+-		휴대폰* : <input type="text" placeholder="숫자만 입력해주세요" name="cust_phone" size="27"><br>
+-		
+-		이메일* : <input type="text" placeholder="예) bogglebox@boggle.com" name="cust_email" size="27">
+-				<input type="submit" value="중복확인"><br>
++		<form action="insertCustomer" method="post" name="joinForm">
++			<div class="join_form">
++				
++				<div class="join_box">
++					<strong class="join_name">아이디</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_id">
++							<input type="text" placeholder="  6자 이상의 영문 혹은 숫자를 조합" name="cust_id" id="cust_id" size="50">
++							<span><input type="button" value="중복확인" id="btnCheck" class="btnCheck" style="height: 30px; width: 80px;"><span id="result" class="result"></span></span>	
++						</span>
++				</div>
++				
++				
++				<div class="join_box">
++					<strong class="join_name">비밀번호</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_pwd">  
++							<input type="password" placeholder="  비밀번호를 입력해주세요" name="cust_pwd" id="cust_pwd" size="50"><br>
++						</span>
++				</div>
++				
++				
++				<div class="join_box">
++					<strong class="join_name">비밀번호확인</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_pwdok">  
++							<input type="password" placeholder="  비밀번호를 한번 더 입력해주세요" name="cust_pwd_ck" id="cust_pwd_ck" onkeyup="passConfirm()" size="50"> <span id ="confirmMsg"></span><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">이름</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_name">  
++							<input type="text" placeholder="  이름을 입력해주세요" name="cust_name" size="50"><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">휴대폰</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_phone">  
++							<input type="text" placeholder="  숫자만 입력해주세요" name="cust_phone" size="50"><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">이메일</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_email"> 
++							<input type="text" placeholder="  예) bogglebox@boggle.com" name="cust_email" id="cust_email" size="50">
++							<input type="button" value="중복확인" id="btnCheck2" class="btnCheck" style="height: 30px; width: 80px;">
++							<span id="emailCheck" class="result"></span><br>
++						</span>
++				</div>
++					
++				<div class="join_box">
++					<strong class="join_name">주소</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_addr">		
++							<input type="text" name="cust_addr1" id="cust_addr1"  placeholder="  우편번호" size="10"> 
++			           		<input type="button" value="우편번호찾기" onclick="kakaopost()" class="btnCheck" style="height: 30px; width: 100px;"><br>
++							<input type="text" name="cust_addr2" id="address" placeholder="  도로명주소" size="50"><br>
++							<input type="text" name="cust_addr3" id="cust_addr3" placeholder="  상세주소" size="50"><br>
++						</span>
++				</div>
++						
++				<br>
++				<input type="submit" value="가입하기" id="join_submit" style="height: 40px; width: 150px;" onclick="checkCustomer()">
++				</div>
++		</form>	
++	</div>
+ 		
+-		주소*	:	<input type="text" name="cust_addr1" id="cust_addr1" placeholder="우편번호" size="10"> 
+-           		<input type="button" value="우편번호찾기" onclick="kakaopost()"><br>
+-				<input type="text" name="cust_addr2" id="address" placeholder="도로명주소" size="27"><br>
+-				<input type="text" name="cust_addr3" placeholder="상세주소" size="27"><br>
+-		<br>
+-		<input type="submit" value="가입하기" onclick="checkCustomer()">
+-	</form>
++
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/loginOK.jsp b/final_Project/src/main/webapp/WEB-INF/views/loginOK.jsp
+index d2c5a16..ad3cffb 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/loginOK.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/loginOK.jsp
+@@ -1,5 +1,6 @@
+ <%@ page language="java" contentType="text/html; charset=UTF-8"
+     pageEncoding="UTF-8"%>
++<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+ <!DOCTYPE html>
+ <html>
+ <head>
+@@ -8,6 +9,17 @@
+ </head>
+ <body>
+ 	${msg }
++
++	<a href="main">메인으로 가기</a><br>
++	 <c:if test="${cust_id eq 'bbox' }"> 
++                <a href="admin/adminMain">관리자페이지로 가기</a><br>
++        </c:if>
++
+ 	<a href="main">메인으로 가기</a>
++	<a href="/mypage/listQna">qna 가기</a>
++	<a href="/mypage/updateCustomer">개인정보수정</a>
++	<a href="/mypage/orderList">주문내역</a><br>
++	<a href="logout">logout</a>
++
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/main.jsp b/final_Project/src/main/webapp/WEB-INF/views/main.jsp
+index eaafa75..f5ec40c 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/main.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/main.jsp
+@@ -4,10 +4,48 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<!-- slick 라이브러리 추가 -->
++<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
++<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
++<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++<link rel="stylesheet" href="../resources/css/main.css" type="text/css">
++<script type="text/javascript">
++	$(document).ready(function(){
++		$(".slide_div").slick(
++			{
++				dots:false,
++				autoplay:true,
++				autoplaySpeed:3000
++			}		
++		);
++	});
++</script>
+ </head>
+ <body>
+-	<jsp:include page="common/header.jsp"></jsp:include>
++	<div id="container">
++		<div><jsp:include page="common/header.jsp"></jsp:include></div>
++		<div id="main">
++			<div class="banner-sect">
++				<div class="slide_div">
++					<div>
++						<a><img src="/images/banner1.jpg" width="100%"></a>
++					</div>
++					<div>
++						<a><img src="/images/banner2.jpg" width="100%"></a>
++					</div>
++					<div>
++						<a><img src="/images/banner3.jpg" width="100%"></a>
++					</div>
++				</div>
++			</div>
++			<div class="discount-sect"></div>
++			<div class="best-sect"></div>
++		</div>
++		<div><!-- 푸터 --></div>
++	</div>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/cartProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/cartProduct.jsp
+index 12fdb32..70f2459 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/market/cartProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/cartProduct.jsp
+@@ -8,7 +8,7 @@
+ <meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+-
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<h2>장바구니</h2>
+@@ -21,7 +21,7 @@
+ 				 <input type="hidden" name="a" value="${loop.count}">
+ 				 <input type="hidden" name="product_no" value="${cp.product_no}">
+ 				 <input type="hidden" name="cart_no" value="${cp.cart_no}">
+-				 <input type="hidden" name="cust_id" value="${now_id}">
++				 <input type="hidden" name="cust_id" value="${cust_id}">
+ 				 <input type="hidden" name="product_img" value="${cp.product_img}">
+ 				 <input type="hidden" name="product_name" value="${cp.product_name}">
+ 				 <input type="hidden" name="product_price" value="${cp.product_price}">
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/detailProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/detailProduct.jsp
+new file mode 100644
+index 0000000..dd95c8c
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/detailProduct.jsp
+@@ -0,0 +1,200 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
++<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
++<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
++<script src="../../resources/js/detailProduct.js" type="text/javascript"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++<style type="text/css">
++	.review-accordion{
++		display: none;
++	}
++	.qna-accordion{
++		display: none;
++	}
++</style>
++<script type="text/javascript">
++	$(function(){
++		$(".review_title").click(function(){
++			$(".review-accordion").toggle("slow");
++		});
++		$(".qna_title").click(function(){
++			$(".qna-accordion").toggle("slow");
++		});
++	});
++</script>
++</head>
++<body>
++	<div id="container">
++		<div id="header"><jsp:include page="../common/header.jsp"></jsp:include></div>
++		
++		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
++			<div class="modal-dialog modal-lg">
++				<div class="modal-content">
++					<div class="modal-header">
++						<h5 class="modal-title" id="exampleModalLabel">구매하시는 상품의 수량을 선택해주세요.</h5>
++						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
++					</div>
++					<div class="modal-body">
++						<div class="product-body">
++							<div class="modal-img-section">
++								<img class="product-img" src="/images/${p.product_img }">
++							</div>
++							<div class="modal-info-section">
++								<div class="modal-info-name">
++									<span>${p.product_name}</span>
++								</div>
++								<div class="modal-info-cnt" align="center">
++									<div>
++										<span id="left-Button" onclick="leftButton(this)">&laquo;</span>&nbsp;
++										<span id="product_cnt" style="font-weight: lighter;">1</span>&nbsp;
++										<span id="right-Button" onclick="rightButton(this)">&raquo;</span>
++									</div>
++								</div>
++								<div class="modal-info-price" align="center">
++									<span id="product_price">${p.product_price}</span>
++									<span>원</span>
++								</div>
++							</div>
++						</div>
++					</div>
++					<div class="modal-footer" align="center">
++						<button type="button" class="btn btn-primary" onclick="insertCart()">장바구니에 담기</button>
++						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">쇼핑 계속하기</button>
++					</div>
++				</div>
++			</div>
++		</div>
++		
++		<div class="page_article">
++			<div class="top-section">
++				<div class="top-left-section">
++					<div class="img-wrap" style="height: 100%;">
++						<img id="img" src="/images/${p.product_img }">
++					</div>
++				</div>
++				<div class="top-right-section">
++					<div class="div-top-section" style="margin-bottom: 0;">
++						<span class="short-desc">${p.product_desc}</span><br>
++						<span class="name">${p.product_name}</span>
++					</div>
++	
++					<div class="div-top-section" style="margin-top: 10px;">
++						<div class="right-info-title">가격</div>
++						<div class="right-info-desc">
++							<span>${p.product_price}</span>
++							<span>원</span>
++						</div>
++					</div>
++					<div class="div-top-section">
++						<div class="right-info-title">배송 정보</div>
++						<div class="right-info-desc" style="margin-bottom: 20px;">
++							<span>일반배송 : 3000원</span>
++						</div>
++					</div>
++					<div class="hidden-info">
++						<span id="cust_id" style="display:none;">${cust_id }</span>
++						<span id="product_no" style="display:none;">${p.product_no }</span>
++					</div>
++					<div class="div-top-section button-wrap">
++						<button type="button" class="btn btn-outline-primary top-button" data-bs-toggle="modal" data-bs-target="#exampleModal">장바구니</button>
++					</div>
++				</div>
++			</div>
++			
++			<hr style="box-shadow: 0px 0px 3px 0px gray; margin: 3% 17%">
++			
++			<div class="tap-section">
++				<button id="detailButton" class="btn btn-lg btn-primary tap-button" onclick="detailTap()">상품정보</button>
++				<button id="reviewButton" class="btn btn-lg btn-secondary tap-button" onclick="reviewTap()">상품후기</button>
++				<button id="qnaButton" class="btn btn-lg btn-secondary tap-button" onclick="qnaTap()">상품문의</button>
++				<button id="exchangeButton" class="btn btn-lg btn-secondary tap-button" onclick="exchangeTap()">교환/반품</button>
++			</div>
++			
++			<div class="bottom-section">
++				<div class='review-wrap' style='display:none;'>
++					<ul class='review-ul-body'>
++						<c:choose>
++							<c:when test="${not empty reviewList}">
++								<c:forEach var="r" items="${reviewList }">
++									<li class='li-tag'>
++										<div class='review-box'>
++											<div class='review-text-div'>
++												<span class="review_title">${r.review_title }</span><br>
++												<span>${r.cust_id }</span>
++											</div>
++											<div class="review-accordion">
++												<span>${r.review_content }</span>
++												<img src="/images/${r.review_img }" onerror="this.style.display='none'">
++											</div>
++										</div>
++									</li>
++								</c:forEach>
++							</c:when>
++							<c:otherwise>
++								<img src="/images/icon_mark.png">
++								등록된 상품후기가 없습니다.
++							</c:otherwise>
++						</c:choose>
++					</ul>
++				</div>
++				
++				<div class='detail-wrap'>
++					<img src="/images/${p.product_detail }"> 
++				</div>
++				
++				<div class='qna-wrap' style='display:none;'>
++					<ul class='qna-ul-body'>
++						<c:choose>
++							<c:when test="${not empty qnaList}">
++								<c:forEach var="q" items="${qnaList }">
++									<li class='li-tag'>
++										<div class='qna-box'>
++											<div class='qna-text-div'>
++												<span class="qna_title">${q.qna_title }</span><br>
++												<span>${q.cust_id }</span>
++													|
++												<span><fmt:formatDate value="${q.qna_date }"/> </span>
++											</div>
++											<div class="qna-accordion">
++												<div class="qna-question">
++													<span><img src="/images/icon_q.jpg" style="width: 25px; height: 25px;"></span>
++													<span>${q.qna_content }</span>
++													<img src="/images/${q.qna_img }" onerror="this.style.display='none'">
++												</div>
++												<c:if test="${not empty q.qna_answer}">
++													<div class="qna-answer">
++														<span><img src="/images/icon_a.jpg" style="width: 25px; height: 25px;"></span>
++														<span>${q.qna_answer }</span>
++													</div>
++												</c:if>
++											</div>
++										</div>
++									</li>
++								</c:forEach>
++							</c:when>
++							<c:otherwise>
++								<img src="/images/icon_mark.png">
++								등록된 상품문의가 없습니다.
++							</c:otherwise>
++						</c:choose>
++					</ul>
++				</div>
++				
++				<div class='exchange-wrap' style='display:none;'>
++					<img src="/images/exchange_desc.jpg">
++				</div>
++			</div>
++		</div>
++		<div id="footer"><!-- 푸터 --></div>
++	</div>
++	
++</body>
++</html> 
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/listProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/listProduct.jsp
+index 059142d..ea34029 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/market/listProduct.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/listProduct.jsp
+@@ -4,9 +4,10 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<div id="container">
+@@ -26,19 +27,18 @@
+ 				</div>
+ 				<div class="marketList_p">
+ 					<div class="head">
+-						<select class="orderTypeSelect" id="selectBoxTest" onchange="changeSelection(this.value)">
+-							<option class="orderTypeOption" value="product_date desc" selected="selected"><a href="/market/listProduct?orderColumn=product_date desc">최신순</a></option>
+-							<option class="orderTypeOption" value="product_price desc">높은가격순</option>
+-							<option class="orderTypeOption" value="product_price">낮은가격순</option>
+-						</select>
++						<ul class="list">
++							<li><a href="/market/listProduct?orderType=product_date desc">최신순</a></li><br>
++							<li><a href="/market/listProduct?orderType=product_price desc">높은가격순</a></li><br>
++							<li><a href="/market/listProduct?orderType=product_price">낮은가격순</a></li><br>
++						</ul>
+ 					</div>
+ 					<div class="box">
+ 						<c:forEach var="p" items="${list }">
+ 							<div class="box_list">
+-								<a href="/market/detailProduct"><img class="box_list_img" src="/images/${p.product_img }" width="400" height="400"></a>
++								<a href="/market/detailProduct?product_no=${p.product_no }"><img class="box_list_img" src="/images/${p.product_img }" width="400" height="400"></a>
+ 								<div class="box_list_name" name="product_name">${p.product_name }</div>
+ 								<div class="box_list_price" name="product_price">${p.product_price }</div>
+-								<button type="button" class="box_list_cart"><img src="/images/shopping-cart.jpg" width="15" height="15"></button>
+ 							</div>
+ 						</c:forEach>
+ 					</div>
+@@ -50,6 +50,7 @@
+ 				</div>
+ 			</div>
+ 		</div>
++		<div id="footer"><!-- 푸터 --></div>
+ 	</div>
+ 	
+ </body>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/orderPage.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/orderPage.jsp
+index 1691d61..fea18a1 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/market/orderPage.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/orderPage.jsp
+@@ -1,50 +1,61 @@
+-<%@page import="org.apache.catalina.filters.ExpiresFilter.XServletOutputStream"%>
+-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
++<%@page
++	import="org.apache.catalina.filters.ExpiresFilter.XServletOutputStream"%>
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++	pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
+-<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<script type="text/javascript"
++	src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css"
++	type="text/css">
+ </head>
+ <body>
+-		
++
+ 	<h2>주문하기</h2>
+ 	<h4>주문자</h4>
+ 	<hr>
+-	<form action="orderPageOK" method="post">
+-		이름: <input type="text" name="name"><br> 휴대폰 번호:<input
+-			type="tel" name="phone">
++	<form action="">
++		이름: <input type="text" name="name"><br> 
++		휴대폰 번호:<input type="tel" name="phone">
+ 	</form>
+ 
+ 	<h4>배송정보</h4>
+ 	<hr>
+ 	<div>배송지</div>
+-  <input type="text" id="sample6_postcode" placeholder="우편번호">
+-  <input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기"><br>
+-  <input type="text" id="sample6_address" placeholder="주소"><br>
+-  <input type="text" id="sample6_detailAddress" placeholder="상세주소">
+-  <input type="text" id="sample6_extraAddress" placeholder="참고항목"><br>
+-  
+-  <h4>배송상품</h4>
++	<input type="text" id="order_addr1" placeholder="우편번호">
++	<input type="button" onclick="sample6_execDaumPostcode()"
++		value="우편번호 찾기">
++	<br>
++	<input type="text" id="order_addr2" placeholder="주소">
++	<br>
++	<input type="text" id="order_addr3" placeholder="상세주소">
++	<input type="text" id="sample6_extraAddress" placeholder="참고항목">
++	<br>
++
++	<h4>배송상품</h4>
+ 	<hr>
+ 	<script>
+-	let today = new Date();
+-	let month = today.getMonth() + 1;  // 월
+-	let date = today.getDate()+1;  // 날짜
+-	let day = today.getDay();  // 요일
+-	
+-	document.write(month + '/' + date + ' 도착 예정')
++		let today = new Date();
++		let month = today.getMonth() + 1; // 월
++		let date = today.getDate() + 1; // 날짜
++		let day = today.getDay(); // 요일
++
++		document.write(month + '/' + date + ' 도착 예정')
+ 	</script>
+-	
+-  <%request.setCharacterEncoding("utf-8"); 
+-  	String cpList=request.getParameter("cpList");
+-  	System.out.println(cpList);
+-  %>
+-  
+- 
+-  <table border="1" width="80%">
+-  <thead>
++
++	<%
++	request.setCharacterEncoding("utf-8");
++	String cpList = request.getParameter("cpList");
++	System.out.println(cpList);
++	%>
++
++
++	<table border="1" width="80%">
++		<thead>
+ 			<tr>
+ 				<td>상품이미지</td>
+ 				<td>상품이름</td>
+@@ -52,107 +63,189 @@
+ 				<td>가격</td>
+ 			</tr>
+ 		</thead>
+-  <tbody id="product_tbody"></tbody>
+- 				<td id="totalSum" colspan=7 style="text-align:right;">총 상품 금액 : 원</td>
+- </table>
+- 
+-  <script>
+-  	var cpList= <%=cpList%>
+-  	function showcpList(cpList){
+-  		console.log(cpList);
+-  		console.log(cpList.length);
+-  		var tr_table=""
+-  				for (var i = 0; i < cpList.length; i++) {  
+-  	  	            var tr_table = '<tr><td><img src="/images/'+cpList[i].product_img+'" width="100" height="100"></td><td>'+cpList[i].product_name+'</td><td>'+cpList[i].product_cnt+'개'+'</td><td>'+cpList[i].product_price+'원'+'</td></tr>'
+-  	  	            $("#product_tbody").append(tr_table);
+-  	  	        	console.log(tr_table);
+-  	  	        }			
+-  		 
+-  	}
+-  	showcpList(cpList);
+-  	
+-  	function calcSum() {
+-  	  // table element 찾기
+-  	  const table = document.getElementById('product_tbody');
+-  	  
+-  	  // 합계 계산
+-  	  let sum = 0;
+-  	  for(let i = 0; i < table.rows.length; i++)  {
+-  	    sum += parseInt(table.rows[i].cells[3].innerHTML)*parseInt(table.rows[i].cells[2].innerHTML);
+-  	  }
+-  	  // 합계 출력
+-  	  console.log(sum);
+-  	  document.getElementById("totalSum").innerHTML ="총 상품 금액 : " +sum+" 원";
+-  	}
+-  	calcSum();
+-  </script>
+- 
++		<tbody id="product_tbody"></tbody>
++		<td id="totalSum" colspan=7 style="text-align: right;">총 상품 금액 :
++			원</td>
++	</table>
++
++	<script>
++		var cpList =
++	<%=cpList%>
++		function showcpList(cpList) {
++			var tr_table = ""
++			for (var i = 0; i < cpList.length; i++) {
++				var tr_table = '<tr><td><img src="/images/'+cpList[i].product_img+'" width="100" height="100"></td><td>'
++						+ cpList[i].product_name
++						+ '</td><td>'
++						+ cpList[i].product_cnt
++						+ '개'
++						+ '</td><td>'
++						+ cpList[i].product_price + '원' + '</td></tr>'
++				$("#product_tbody").append(tr_table);
++				console.log(tr_table);
++			}
++
++		}
++		showcpList(cpList);
++
++		function calcSum() {
++			// table element 찾기
++			const table = document.getElementById('product_tbody');
++
++			// 합계 계산
++			let sum = 0;
++			for (let i = 0; i < table.rows.length; i++) {
++				sum += parseInt(table.rows[i].cells[3].innerHTML)
++						* parseInt(table.rows[i].cells[2].innerHTML);
++			}
++			// 합계 출력
++			console.log(sum);
++			document.getElementById("totalSum").innerHTML = "총 상품 금액 : " + sum
++					+ " 원";
++		}
++		calcSum();
++
++		function OrderRequest() {
++			var cpList =
++				<%=cpList%>
++			var orderList = new Array();
++			for (var i = 0; i < cpList.length; i++) {
++				var data = new Object();
++				data.product_no    = cpList[i].product_no;
++				data.product_img   = cpList[i].product_img;
++				data.product_cnt   = cpList[i].product_cnt;
++				data.cust_id       = cpList[i].cust_id;
++				data.cart_no       = cpList[i].cart_no;
++				data.product_name  = cpList[i].product_name;
++				data.product_price = cpList[i].product_price;
++				data.name= document.getElementsByName("name")[0].value;
++				data.phone= document.getElementsByName("phone")[0].value;
++			    data.order_addr1=document.getElementById("order_addr1").value;
++			    data.order_addr2=document.getElementById("order_addr2").value;
++			    data.order_addr3=document.getElementById("order_addr3").value;
++			    //data.payment_code=document.getElementsByName("payment").value;
++			    checkboxes 
++			      = document.getElementsByName("payment");
++			    checkboxes.forEach((cb) => {
++				    if(cb.checked)data.payment_code = cb.value;
++				  })
++			    console.log(data);
++				orderList.push(data);
++			}
++			//console.log(orderList);
++
++			var jsonData = JSON.stringify(orderList);
++			console.log(jsonData);
++
++			var form = document.createElement('form'); // 폼객체 생성
++			form.setAttribute('method', 'post'); //get,post 가능
++			form.setAttribute('action', "/market/orderRequest"); //보내는 url
++			document.charset = "utf-8";
++			var objs;
++			objs = document.createElement('input'); // 값이 들어있는 녀석의 형식
++			objs.setAttribute('type', 'hidden'); // 값이 들어있는 녀석의 type
++			objs.setAttribute('name', 'orderList'); // 객체이름
++			objs.setAttribute('value', jsonData); //객체값
++			objs.setAttribute('contentType', 'application/json');
++			form.appendChild(objs);
++
++			document.body.appendChild(form);
++			form.submit();
++
++		}
++		
++	</script>
++
+ 	<h4>결제수단</h4>
+ 	<hr>
+-	<input type="checkbox" value="신용카드">신용카드
+-	<input type="checkbox" value="실시간 계좌이체">실시간 계좌이체
+-	<input type="checkbox" value="휴대폰 결제">휴대폰 결제<br>
+-	<input type="checkbox" value="PAYCO">PAYCO
+-	<input type="checkbox" value="kakaopay">kakaopay
+-	<input type="checkbox" value="Smilepay">Smilepay<br>
+-		
+-	<button type="button">결제하기</button>			
++	<input type="checkbox" name="payment" value="0" onclick='checkOnlyOne(this)'/>신용카드
++	<input type="checkbox" name="payment" value="1" onclick='checkOnlyOne(this)'/>실시간 계좌이체
++	<input type="checkbox" name="payment" value="2" onclick='checkOnlyOne(this)'/>휴대폰 결제
++	<br>
++	<input type="checkbox" name="payment" value="3" onclick='checkOnlyOne(this)'/>PAYCO
++	<input type="checkbox" name="payment" value="4" onclick='checkOnlyOne(this)'/>kakaopay
++	<input type="checkbox" name="payment" value="5" onclick='checkOnlyOne(this)'/>Smilepay
++	<br>
++	
++<script>
++	function checkOnlyOne(element) {
++		  
++		  const checkboxes 
++		      = document.getElementsByName("payment");
++		  
++		  checkboxes.forEach((cb) => {
++		    cb.checked = false;
++		  })
++		  
++		  element.checked = true;
++		}
++</script>
++
++
+ 	
++		<button type="button" onclick="OrderRequest()" id="btnOrder">결제하기</button>
++	
++
+ 	<script
+ 		src="${pageContext.request.contextPath}/resources/js/orderPage.js"></script>
+-		<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
++	<script
++		src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+ 	<script>
+-	
+-	
+-	//카카오 주소찾기 api
+-    function sample6_execDaumPostcode() {
+-        new daum.Postcode({
+-            oncomplete: function(data) {
+-                // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+-
+-                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+-                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+-                var addr = ''; // 주소 변수
+-                var extraAddr = ''; // 참고항목 변수
+-
+-                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+-                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+-                    addr = data.roadAddress;
+-                } else { // 사용자가 지번 주소를 선택했을 경우(J)
+-                    addr = data.jibunAddress;
+-                }
+-
+-                // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+-                if(data.userSelectedType === 'R'){
+-                    // 법정동명이 있을 경우 추가한다. (법정리는 제외)
+-                    // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
+-                    if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+-                        extraAddr += data.bname;
+-                    }
+-                    // 건물명이 있고, 공동주택일 경우 추가한다.
+-                    if(data.buildingName !== '' && data.apartment === 'Y'){
+-                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+-                    }
+-                    // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
+-                    if(extraAddr !== ''){
+-                        extraAddr = ' (' + extraAddr + ')';
+-                    }
+-                    // 조합된 참고항목을 해당 필드에 넣는다.
+-                    document.getElementById("sample6_extraAddress").value = extraAddr;
+-                
+-                } else {
+-                    document.getElementById("sample6_extraAddress").value = '';
+-                }
+-
+-                // 우편번호와 주소 정보를 해당 필드에 넣는다.
+-                document.getElementById('sample6_postcode').value = data.zonecode;
+-                document.getElementById("sample6_address").value = addr;
+-                // 커서를 상세주소 필드로 이동한다.
+-                document.getElementById("sample6_detailAddress").focus();
+-            }
+-        }).open();
+-    }
+-</script>
++		//카카오 주소찾기 api
++		function sample6_execDaumPostcode() {
++			new daum.Postcode(
++					{
++						oncomplete : function(data) {
++							// 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
++
++							// 각 주소의 노출 규칙에 따라 주소를 조합한다.
++							// 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
++							var addr = ''; // 주소 변수
++							var extraAddr = ''; // 참고항목 변수
+ 
++							//사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
++							if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
++								addr = data.roadAddress;
++							} else { // 사용자가 지번 주소를 선택했을 경우(J)
++								addr = data.jibunAddress;
++							}
++
++							// 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
++							if (data.userSelectedType === 'R') {
++								// 법정동명이 있을 경우 추가한다. (법정리는 제외)
++								// 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
++								if (data.bname !== ''
++										&& /[동|로|가]$/g.test(data.bname)) {
++									extraAddr += data.bname;
++								}
++								// 건물명이 있고, 공동주택일 경우 추가한다.
++								if (data.buildingName !== ''
++										&& data.apartment === 'Y') {
++									extraAddr += (extraAddr !== '' ? ', '
++											+ data.buildingName
++											: data.buildingName);
++								}
++								// 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
++								if (extraAddr !== '') {
++									extraAddr = ' (' + extraAddr + ')';
++								}
++								// 조합된 참고항목을 해당 필드에 넣는다.
++								document.getElementById("sample6_extraAddress").value = extraAddr;
++
++							} else {
++								document.getElementById("sample6_extraAddress").value = '';
++							}
++
++							// 우편번호와 주소 정보를 해당 필드에 넣는다.
++							document.getElementById('order_addr1').value = data.zonecode;
++							document.getElementById("order_addr2").value = addr;
++							// 커서를 상세주소 필드로 이동한다.
++							document.getElementById("order_addr3")
++									.focus();
++						}
++					}).open();
++		}
++	</script>
++	<script src="${pageContext.request.contextPath}/resources/js/cart.js"></script>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/orderPageOK.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/orderPageOK.jsp
+new file mode 100644
+index 0000000..540f560
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/orderPageOK.jsp
+@@ -0,0 +1,13 @@
++<%@ page language="java" contentType="text/html; charset=EUC-KR"
++    pageEncoding="EUC-KR"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="EUC-KR">
++<title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++</head>
++<body>
++<h2>�ֹ��� �Ϸ�Ǿ����ϴ�</h2>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/market/recentProduct.jsp b/final_Project/src/main/webapp/WEB-INF/views/market/recentProduct.jsp
+new file mode 100644
+index 0000000..28dae86
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/market/recentProduct.jsp
+@@ -0,0 +1,44 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/recentProduct.css" type="text/css">
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++</head>
++<body>
++	<div id="container">
++		<div id="header"><jsp:include page="../common/header.jsp"></jsp:include></div>
++		<div class="page_article">
++			<div class="recentLsit">
++				
++				<div class="head">
++					<ul class="list">
++						<li><a href="/market/recentProduct?orderType=product_price desc">높은가격순</a></li><br>
++						<li><a href="/market/recentProduct?orderType=product_price">낮은가격순</a></li><br>
++					</ul>
++				</div>
++				<div class="list_goods">
++					<ul class="list">
++						<c:forEach var="r" items="${list }">
++							<li>
++								<div class="item">
++									<a href="/market/detailProduct"><img class="box_list_img" src="/images/${r.product_img }" width="400" height="400"></a>
++									<div class="box_list_name" name="product_name">${r.product_name }</div>
++									<div class="box_list_price" name="product_price">${r.product_price }</div>
++								</div>
++							</li>
++						</c:forEach>
++					</ul>
++				</div> 
++				
++			</div>
++		</div>
++		<div id="footer"><!-- 푸터 --></div>
++	</div>
++	
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/contentReview.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/contentReview.jsp
+index ae18f79..9741e3c 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/mypage/contentReview.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/contentReview.jsp
+@@ -4,8 +4,9 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<div id="container">
+@@ -35,20 +36,20 @@
+ 									</td>
+ 								</tr>
+ 								<tr>
+-									<th>후기작성</th>
++									<th>후기내용</th>
+ 									<td>
+ 										<textarea id="fieldCmt" name="review_content" rows="10" cols="100" style="height:202px;">${c.review_content }</textarea>
+ 									</td>
+ 								</tr>
+ 								<tr>
+-									<th>사진등록</th>
++									<th>첨부파일</th>
+ 									<td>
+ 										<img src="/images/${c.review_img }" onerror="this.style.display='none'">
+ 									</td>
+ 								</tr>
+ 							</tbody>
+ 						</table>
+-						<a href="/mypage/deleteReview/${c.review_no }">삭제하기</a>
++						<a href="/mypage/deleteReview/${c.review_no }">삭제</a>
+ 					</div>
+ 				</div>
+ 			</div>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewComplete.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewComplete.jsp
+index d1733a5..cd007f1 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewComplete.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewComplete.jsp
+@@ -4,14 +4,26 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++<link rel="stylesheet" href="../resources/css/mypageCommon.css" type="text/css">
+ </head>
+ <body>
+ 	<div id="container">
+-		<div id="header"><!-- 헤더 --></div>
++		<div><jsp:include page="../common/header.jsp"></jsp:include></div>
+ 		<div class="page_article">
+-			<div><!-- 메뉴 --></div>
++			<div id="snb">
++				<h2 class="tit_snb">마이보글</h2>
++				<div class="inner_snb">
++					<ul class="list_menu">
++						<li><a href="#">주문 내역</a></li>
++						<li><a href="/mypage/listReviewWrite">상품 후기</a></li>
++						<li><a href="/mypage/listQna">상품 문의</a></li>
++						<li><a href="/mypage/updateCustomer">개인 정보 수정</a></li>
++					</ul>
++				</div>
++			</div>
+ 			<div class="page_section">
+ 				<div class="head_article">
+ 					<h2>상품 후기</h2>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewWrite.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewWrite.jsp
+index 68baeea..102f0c0 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewWrite.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/listReviewWrite.jsp
+@@ -4,8 +4,9 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+ </head>
+ <body>
+ 	<div id="container">
+@@ -28,7 +29,7 @@
+ 							<li>
+ 								<div>
+ 									<div name="order_no">주문번호  ${r.order_no }</div>
+-									<img src="/images/${r.product_img }" width="80px" height="80px" name="product_img">
++									<img src="/images/${r.product_img }" width="80px" height="80px" name="product_img" onerror="this.style.display='none'">
+ 									<div class="name" name="product_name">${r.product_name }</div>
+ 									<a href="/mypage/updateReview?review_no=${r.review_no }">후기작성</a>
+ 								</div>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/orderDetail.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/orderDetail.jsp
+new file mode 100644
+index 0000000..8c42605
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/orderDetail.jsp
+@@ -0,0 +1,41 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++</head>
++<body>
++	<h2>주문 내역 상세</h2>
++	주문번호 ${o.order_no } <br>
++	<table border="1">
++		<c:forEach var="o" items="${list }">
++			<tr>
++				<%-- <td>${o.product_img }</td> --%>
++				<td>${o.product_name }</td>
++				<td><img src="../images/${o.product_img }" width="100" height="100"></td>
++				<td>${o.product_price }</td>
++				<td>${o.detail_cnt }</td>
++				<td>${o.status_name }</td>
++			</tr>
++		</c:forEach>
++	</table>
++	<br>
++	결제정보
++	<hr>
++	상품금액 ${totalDetail }<br>
++	배송비 3000원<br>
++	결제금액 ${totalDetail +3000 }<br>
++	결제방법 ${o.payment_name }<br>
++	<br>
++	배송정보
++	<hr>
++	받는 분 ${o.cust_name }<br>
++	휴대폰 ${o.cust_phone }<br>
++	주소 ${o.cust_addr1 }${o.cust_addr2 }${o.cust_addr3 }<br>
++	
++	<a href="orderList">목록</a>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/orderList.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/orderList.jsp
+new file mode 100644
+index 0000000..fd5c416
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/orderList.jsp
+@@ -0,0 +1,42 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
++<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt"  prefix="fmt"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/orderList.css" type="text/css">
++<link rel="preconnect" href="https://fonts.googleapis.com">
++<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
++</head>
++<body>
++	<!-- 이름줄때 앞에 ol붙이기(orderlist) -->
++	<div class="ol_container">
++		<div id="ol_title">
++			<h2>주문 내역</h2>
++		</div>
++		<hr id="ol_hr"><br>
++		
++		<div class="ol_form">
++			<c:forEach var="o" items="${list }">
++				<div id="ol_date"><fmt:formatDate value="${o.order_date }"/></div>
++				
++				<div class="ol_box" style="border: solid 1px">
++					<div>
++						<span id="ol_link_name">주문상세보기</span><a id="ol_detail_link" href="orderDetail?order_no=${o.order_no}">></a>
++					</div>
++					<hr width="650px">
++					<div id="ol_content">
++						<p>주문번호&nbsp;&nbsp;&nbsp;${o.order_no }</p>			
++						<span>주문상태&nbsp;&nbsp;&nbsp;${o.status_name }</span><a id="ol_cancel" style="height: 30px; width: 80px;" href="orderCancelPage">주문취소</a>
++					</div>					
++				</div>	
++
++			</c:forEach>
++		</div>
++	</div>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/updateCustomer.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/updateCustomer.jsp
+new file mode 100644
+index 0000000..0dabae0
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/updateCustomer.jsp
+@@ -0,0 +1,114 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++<link rel="stylesheet" href="../resources/css/insertCustomer.css" type="text/css">
++<link rel="preconnect" href="https://fonts.googleapis.com">
++<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
++<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
++<script type="text/javascript">
++function kakaopost() {
++    new daum.Postcode({
++        oncomplete: function(data) {
++           document.querySelector("#cust_addr1").value = data.zonecode;
++           document.querySelector("#address").value =  data.address
++        }
++    }).open();
++}
++function passConfirm() {
++	
++	var password = document.getElementById('cust_pwd');				//비밀번호 
++	var passwordConfirm = document.getElementById('cust_pwd_ck');	//비밀번호 확인 값
++	var confrimMsg = document.getElementById('confirmMsg');			//확인 메세지
++	var correctColor = "#00ff00";
++	var wrongColor ="#ff0000";
++	
++	if(password.value == passwordConfirm.value){//password 변수의 값과 passwordConfirm 변수의 값과 동일하다.
++		confirmMsg.style.color = correctColor;/* span 태그의 ID(confirmMsg) 사용  */
++		confirmMsg.innerHTML ="비밀번호 일치";/* innerHTML : HTML 내부에 추가적인 내용을 넣을 때 사용하는 것. */
++	}else{
++		confirmMsg.style.color = wrongColor;
++		confirmMsg.innerHTML ="비밀번호 불일치";
++		return false;
++	}
++}
++</script>
++</head>
++<body>
++<!-- 이름줄때 앞에 join_ 붙이기 -->
++	<div class="join_container">
++		<div id="join_title">
++			<h2>개인 정보 수정</h2>
++		</div>
++		<div id="join_essential">
++			<label class="join_8">*</label>필수입력사항
++		</div>
++		<hr width="1000px">
++		
++		<form action="updateCustomer" method="post" name="joinForm">
++			<div class="join_form">
++			
++				<div class="join_box">
++					<strong class="join_name">아이디</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_id">
++							<input type="hidden" name="cust_id" value="${c.cust_id }"> ${c.cust_id }
++						</span>
++				</div> 
++				
++				<div class="join_box">
++					<strong class="join_name">비밀번호</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_pwd">  
++					  		<input type="password" name="cust_pwd" value="${c.cust_pwd }" id="cust_pwd" size="50"> 
++					  	</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">비밀번호확인</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_pwdok">  
++							<input type="password" name="cust_pwd_ck" id="cust_pwd_ck" onkeyup="passConfirm()" size="50"> <span id ="confirmMsg"></span><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">이름</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_name">  
++						  <input type="text" name="cust_name" value="${c.cust_name }" size="50"><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">휴대폰</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_phone"> 
++							<input type="text" name="cust_phone" value="${c.cust_phone }" size="50"><br>
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">이메일</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_email"> 
++							<input type="hidden" name="cust_email" value="${c.cust_email }">  ${c.cust_email }
++						</span>
++				</div>
++				
++				<div class="join_box">
++					<strong class="join_name">주소</strong><label class="join_8">*</label>
++						<span class="join_tag" id="join_tag_addr">			
++							<input type="text" name="cust_addr1" id="cust_addr1"value="${c.cust_addr1 }"size="10"> 
++			           		<input type="button" value="우편번호찾기" onclick="kakaopost()" class="btnCheck" style="height: 30px; width: 100px;"><br>
++							<input type="text" name="cust_addr2" value="${c.cust_addr2 }" id="address" size="50"><br>
++							<input type="text" name="cust_addr3" id="cust_addr3" value="${c.cust_addr3 }" size="50"><br>
++						</span>
++				</div>
++				
++				<br>
++				<input type="submit" value="확인"  id="join_submit" style="height: 40px; width: 150px;" onclick="checkCustomer()">
++			</div>
++			
++		</form>
++	</div>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypage/updateReview.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypage/updateReview.jsp
+index b2b999f..2512728 100644
+--- a/final_Project/src/main/webapp/WEB-INF/views/mypage/updateReview.jsp
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypage/updateReview.jsp
+@@ -3,8 +3,17 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+-<meta charset="EUC-KR">
++<meta charset="UTF-8">
+ <title>Insert title here</title>
++<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++<link rel="stylesheet" href="../resources/css/common.css" type="text/css">
++<script type="text/javascript">
++	$(function(){
++		$("#btnSubmit").click(function(){
++			alert("후기를 작성해주셔서 감사합니다.");
++		});
++	});
++</script>
+ </head>
+ <body>
+ 	<div id="container">
+@@ -37,14 +46,14 @@
+ 									</td>
+ 								</tr>
+ 								<tr>
+-									<th>후기작성</th>
++									<th>후기내용</th>
+ 									<td>
+ 										<textarea id="fieldCmt" name="review_content" rows="10" cols="100" 
+ 											placeholder="내용을 입력해주세요.반품/환불 문의는 상품문의로 가능합니다." style="height:202px;"></textarea>
+ 									</td>
+ 								</tr>
+ 								<tr>
+-									<th>사진등록</th>
++									<th>첨부파일</th>
+ 									<td>
+ 										<input type="hidden" name="review_img">
+ 										<input type="file" name="uploadFile">
+@@ -55,7 +64,7 @@
+ 								</tr>
+ 							</tbody>
+ 						</table>
+-						<input type="submit" id="btnSubnmit" class="btn_reg" value="등록하기">
++						<input type="submit" id="btnSubmit" class="btn_reg" value="등록">
+ 					</div>
+ 				</form>
+ 			</div>
+diff --git a/final_Project/src/main/webapp/WEB-INF/views/mypageMain.jsp b/final_Project/src/main/webapp/WEB-INF/views/mypageMain.jsp
+new file mode 100644
+index 0000000..d9ff895
+--- /dev/null
++++ b/final_Project/src/main/webapp/WEB-INF/views/mypageMain.jsp
+@@ -0,0 +1,21 @@
++<%@ page language="java" contentType="text/html; charset=UTF-8"
++    pageEncoding="UTF-8"%>
++<!DOCTYPE html>
++<html>
++<head>
++<meta charset="UTF-8">
++<title>Insert title here</title>
++</head>
++<body>
++<!-- 마이페이지 메인에서 개인정보수정 탭을 누르면 이리로 온다 그리고 확인을 누르면 updateCustomer로 가기 -->
++	<h2>개인 정보 수정</h2>
++	<h3>비밀번호 재확인</h3>
++	<hr>
++	<form action="mypageMain" method="post">
++		아이디 ${cust_id }<br>
++		비밀번호 <input type="password" name="cust_pwd"><br>
++		<hr>
++		<input type="submit" value="확인">
++	</form>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/images/BoggleBox_logo.jpg b/final_Project/src/main/webapp/images/BoggleBox_logo.jpg
+index e0ed054..5bf1961 100644
+Binary files a/final_Project/src/main/webapp/images/BoggleBox_logo.jpg and b/final_Project/src/main/webapp/images/BoggleBox_logo.jpg differ
+diff --git a/final_Project/src/main/webapp/images/banner1.jpg b/final_Project/src/main/webapp/images/banner1.jpg
+new file mode 100644
+index 0000000..f4ae787
+Binary files /dev/null and b/final_Project/src/main/webapp/images/banner1.jpg differ
+diff --git a/final_Project/src/main/webapp/images/banner2.jpg b/final_Project/src/main/webapp/images/banner2.jpg
+new file mode 100644
+index 0000000..04c2869
+Binary files /dev/null and b/final_Project/src/main/webapp/images/banner2.jpg differ
+diff --git a/final_Project/src/main/webapp/images/banner3.jpg b/final_Project/src/main/webapp/images/banner3.jpg
+new file mode 100644
+index 0000000..387df8a
+Binary files /dev/null and b/final_Project/src/main/webapp/images/banner3.jpg differ
+diff --git a/final_Project/src/main/webapp/images/cooking.png b/final_Project/src/main/webapp/images/cooking.png
+new file mode 100644
+index 0000000..d338d07
+Binary files /dev/null and b/final_Project/src/main/webapp/images/cooking.png differ
+diff --git a/final_Project/src/main/webapp/images/exchange_desc.jpg b/final_Project/src/main/webapp/images/exchange_desc.jpg
+new file mode 100644
+index 0000000..6c9bfe2
+Binary files /dev/null and b/final_Project/src/main/webapp/images/exchange_desc.jpg differ
+diff --git a/final_Project/src/main/webapp/images/icon_a.jpg b/final_Project/src/main/webapp/images/icon_a.jpg
+new file mode 100644
+index 0000000..6e2bfef
+Binary files /dev/null and b/final_Project/src/main/webapp/images/icon_a.jpg differ
+diff --git a/final_Project/src/main/webapp/images/icon_mark.png b/final_Project/src/main/webapp/images/icon_mark.png
+new file mode 100644
+index 0000000..cf2dfec
+Binary files /dev/null and b/final_Project/src/main/webapp/images/icon_mark.png differ
+diff --git a/final_Project/src/main/webapp/images/icon_nb.jpg b/final_Project/src/main/webapp/images/icon_nb.jpg
+new file mode 100644
+index 0000000..547c8fe
+Binary files /dev/null and b/final_Project/src/main/webapp/images/icon_nb.jpg differ
+diff --git a/final_Project/src/main/webapp/images/icon_q.jpg b/final_Project/src/main/webapp/images/icon_q.jpg
+new file mode 100644
+index 0000000..055110b
+Binary files /dev/null and b/final_Project/src/main/webapp/images/icon_q.jpg differ
+diff --git a/final_Project/src/main/webapp/images/icon_r.jpg b/final_Project/src/main/webapp/images/icon_r.jpg
+new file mode 100644
+index 0000000..94b810c
+Binary files /dev/null and b/final_Project/src/main/webapp/images/icon_r.jpg differ
+diff --git a/final_Project/src/main/webapp/images/shoe2.jpg b/final_Project/src/main/webapp/images/shoe2.jpg
+new file mode 100644
+index 0000000..68d6141
+Binary files /dev/null and b/final_Project/src/main/webapp/images/shoe2.jpg differ
+diff --git "a/final_Project/src/main/webapp/images/\354\240\234\354\243\274\352\263\240\354\202\254\353\246\254\354\234\241\352\260\234\354\236\245\354\203\201\354\204\270.jpg" "b/final_Project/src/main/webapp/images/\354\240\234\354\243\274\352\263\240\354\202\254\353\246\254\354\234\241\352\260\234\354\236\245\354\203\201\354\204\270.jpg"
+index e69de29..2464922 100644
+Binary files "a/final_Project/src/main/webapp/images/\354\240\234\354\243\274\352\263\240\354\202\254\353\246\254\354\234\241\352\260\234\354\236\245\354\203\201\354\204\270.jpg" and "b/final_Project/src/main/webapp/images/\354\240\234\354\243\274\352\263\240\354\202\254\353\246\254\354\234\241\352\260\234\354\236\245\354\203\201\354\204\270.jpg" differ
+diff --git a/final_Project/src/main/webapp/resources/css/common.css b/final_Project/src/main/webapp/resources/css/common.css
+new file mode 100644
+index 0000000..7180df3
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/common.css
+@@ -0,0 +1,27 @@
++@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap');
++* {
++	 font-family: 'Noto Sans KR', sans-serif; 
++}
++
++ul{
++	list-style-type: none;
++}
++
++/* 링크 밑줄 제거 */
++a{
++	text-decoration: none;
++}
++
++/* 링크,방문했던 링크 색상을 검은색으로 변경 */
++a:link,a:visited{
++	color: #333;
++}
++
++/* 링크 마우스 올리면 색상 변경 */
++a:hover{
++	color:#F26835;
++}
++
++body{
++	margin: 0;
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/css/header.css b/final_Project/src/main/webapp/resources/css/header.css
+new file mode 100644
+index 0000000..c026678
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/header.css
+@@ -0,0 +1,107 @@
++#header{
++	position: relative;
++	width: 100%;
++	min-width: 1200px;
++	min-height: 160px;
++}
++
++section{
++	display: block;
++}
++
++#user-area{
++	width: 1100px;
++	margin: 0 auto;
++	text-align: right;
++}
++
++#user-area .list-menu > li{
++	display: inline-block;
++	position: relative;
++	font-size: 13px;
++}
++
++#user-area .list-menu > li:not(:first-child){
++	margin-left: 30px;
++}
++
++#user-area .list-menu > li:not(:first-child):after{
++	position: absolute;
++	left: -15px;
++	top: 50%;
++	margin-top: -7.5px;
++	width: 1px;
++	height: 15px;
++	background: #888;
++	content: '';
++}
++
++.header_sec{
++	position: relative;
++	width: 1100px;
++	margin: 0 auto;
++}
++
++#header .logo{
++	width: 100%;
++	text-align: center;
++	font-size: 0;
++}
++
++#header .logo a{
++	display: inline-block;
++}
++
++#header .logo a img{
++	display: block;
++}
++
++#header .nb{
++	position: relative;
++	width: 1100px;
++	height: 56px;
++	margin: 0 auto;
++}
++
++#header .nb_list{
++	padding-left: 0px;
++}
++
++#header .nb_list img{
++	margin: 5px 14px 0 0;
++}
++
++#header .nb_list .menu1,.menu2{
++	float: left;
++	width: 124px;
++	height: 55px;
++	color: #333;
++	line-height: 25px;
++	text-align: center;
++	font-weight: 600;
++}
++
++#sub-menu{
++	/* visibility: hidden; */
++	position: absolute;
++	transition: all 0.15s ease-in;
++	border: 1px solid #ccc;
++	margin-left: 15px;
++    margin-top: 15px;
++    background: #fff;
++    display: none;
++}
++
++#sub-menu > ul{
++	position: absolute;
++	display: contents;
++}
++
++#sub-menu li{
++	padding: 10px 20px;
++	text-align: left;
++}
++
++#header .nb_list > li:hover #sub-menu{
++	display: block;
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/css/insertCustomer.css b/final_Project/src/main/webapp/resources/css/insertCustomer.css
+new file mode 100644
+index 0000000..07860cd
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/insertCustomer.css
+@@ -0,0 +1,111 @@
++* {
++font-family: 'Noto Sans KR', sans-serif;
++} 
++
++.join_form{
++	margin-left: auto;
++	margin-right: auto;
++	width: 700px;
++	padding: 20px 0;
++}
++
++#join_title{
++	width: 580px;
++	height: 30px;
++	margin: 0 auto;
++	margin-bottom:50px;
++	margin-top:50px;
++	text-align: center;
++	
++}
++#join_essential{
++	position: relative;
++	text-align: right;
++	margin-right: 450px;
++}
++.join_form{
++	width: 1000px;
++	height: 100%;
++	margin: 25px auto 100px;
++	border-radius: 3px;
++	padding: 50px 50px;
++	
++}
++.join_tag{
++	margin-bottom: 50px;
++}
++.join_8{
++	color: #F2884B;
++}
++.join_box{
++	margin-bottom: 30px;
++	outline: none;
++}
++
++#join_tag_id{
++	margin-left: 100px;
++}
++#join_tag_pwd{
++	margin-left: 85px;
++}
++#join_tag_pwdok{
++	margin-left: 58px;
++}
++#join_tag_name{
++	margin-left: 115px;
++}
++#join_tag_phone{
++	margin-left: 100px;
++}
++#join_tag_email{
++	margin-left: 100px;
++}
++#join_tag_addr{
++	margin-left: 113px;
++}
++input {
++  height:30px;
++}
++#cust_addr1, #address{
++	margin-bottom: 20px;	
++}
++#cust_addr3, #address{
++	margin-left: 330px;	
++}
++
++.btnCheck{
++	background-color: white;
++	border-radius: 3px;
++	color: #F2884B;
++	margin-left: 5px;
++	font-size: 15px;
++	outline: none;
++	box-shadow: none;
++	border : 1px solid #F2884B;
++}
++
++#join_submit{
++	margin-left: 430px;
++	color: white;
++	background-color : #F2884B;
++	border-radius: 3px;
++	font-size: 18px;
++	outline: none;
++	box-shadow: none;
++	border: #F2884B;
++}
++.result{
++	margin-left: 5px;
++}
++.join_name{
++	margin-left: 180px;
++}
++
++
++
++
++
++
++
++
++
+diff --git a/final_Project/src/main/webapp/resources/css/main.css b/final_Project/src/main/webapp/resources/css/main.css
+new file mode 100644
+index 0000000..1fcc5c9
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/main.css
+@@ -0,0 +1,20 @@
++.slick-prev{
++	left: 160px;
++	z-index: 1;
++}
++
++.slick-next{
++	right: 160px;
++	z-index: 1;
++}
++
++.slide_div img{
++	margin: auto;
++}
++
++.image_wrap img{
++	max-width: 85%;
++	height: auto;
++	display: block;
++	margin: auto;
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/css/mypageCommon.css b/final_Project/src/main/webapp/resources/css/mypageCommon.css
+new file mode 100644
+index 0000000..cbf9862
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/mypageCommon.css
+@@ -0,0 +1,45 @@
++.page_article{
++	width: 1050px;
++	margin: 0 auto;
++}
++
++#snb{
++	float: left;
++	width: 200px;
++}
++
++#snb .tit_snb{
++	font-weight: 700;
++	font-size: 28px;
++	line-height: 35px;
++	letter-spacing: -1px;
++}
++
++#snb .inner_snb{
++	border: 1px solid #f2f2f2;
++	border-bottom: 0;
++}
++
++#snb .list_menu{
++	padding: 0;
++	margin: 0;
++}
++
++#snb .list_menu li{
++	border-bottom: 1px solid #f2f2f2;
++}
++
++#snb .list_menu li a{
++	display: block;
++	padding: 14px 0 16px 20px;
++	background: #fff url('/images/icon_r.jpg') no-repeat 174px 52%;
++	background-size: 15px 15px;
++	font-size: 14px;
++	line-height: 20px;
++	letter-spacing: -.3px;
++}
++
++#snb .list_menu img{
++	width: 15px;
++	height: 15px;
++}
+diff --git a/final_Project/src/main/webapp/resources/css/orderList.css b/final_Project/src/main/webapp/resources/css/orderList.css
+new file mode 100644
+index 0000000..a67c817
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/orderList.css
+@@ -0,0 +1,55 @@
++* {
++font-family: 'Noto Sans KR', sans-serif;
++}
++
++#ol_detail_link{
++	float: right;
++	text-decoration: none;
++	color: #F2884B;
++	margin-right: 10px;
++	font-weight: 900;
++	margin-right: 30px;
++}
++
++#ol_cancel{
++	background-color: #F2884B;
++	border-radius: 3px;
++	color: white;
++	font-size: 15px;
++	outline: none;
++	box-shadow: none;
++	border : 1px solid #F2884B;
++	float: right;
++	margin-right: 20px;
++	text-decoration: none;
++	text-align: center;
++	padding-top: 5px;
++	font-weight: bold;
++}
++
++.ol_box{
++	width: 700px;
++	height: 150px;
++	margin-top: 10px;
++	margin-bottom: 20px;
++	padding-top: 20px;
++	
++}
++
++#ol_link_name, #ol_content{
++	margin-left: 30px;
++
++}
++
++#ol_hr{
++	float: left;
++	width: 700px;
++}
++
++h2{
++	margin-bottom: 5px;
++	margin-left: 5px;
++}
++#ol_date{
++	margin-left: 5px;
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/css/recentProduct.css b/final_Project/src/main/webapp/resources/css/recentProduct.css
+new file mode 100644
+index 0000000..80cc1a4
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/css/recentProduct.css
+@@ -0,0 +1,10 @@
++.list_goods li{
++	float: left;
++	width: 356px;
++	height: 682;
++	padding: 25px 18px 0 0;
++}
++
++ul{
++	list-style-type: none;
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/js/cart.js b/final_Project/src/main/webapp/resources/js/cart.js
+index 7861d08..413878f 100644
+--- a/final_Project/src/main/webapp/resources/js/cart.js
++++ b/final_Project/src/main/webapp/resources/js/cart.js
+@@ -146,8 +146,6 @@ function CheckOrder(frm) {
+ 		
+ 		document.body.appendChild(form);
+ 		form.submit();
+-
+-		
+ 	}
+ 	if (yn && a == 0) {
+ 		alert("선택된 제품이 없습니다.");
+@@ -160,10 +158,21 @@ function AllOrder(frm) {
+ 	var count = frm.cartBox.length;
+ 
+ 	var yn = confirm("전체 상품을 구매하시겠습니까?");
+-
++	var cpList = new Array();
+ 	if (yn) {
+ 		for (var index = 0; index < count; index++) {
+-
++			var data = new Object();
++				data.product_no    = frm.product_no[index].value;
++				data.product_img   = frm.product_img[index].value;
++				data.product_cnt   = frm.product_cnt[index].value;
++				data.cust_id       = frm.cust_id[index].value;
++				data.cart_no       = frm.cart_no[index].value;
++				data.product_name  = frm.product_name[index].value;
++				data.product_price = frm.product_price[index].value;
++				
++				cpList.push(data);
++			
++			/*
+ 			var product_no = frm.product_no[index].value;
+ 			$.ajax({
+ 
+@@ -180,7 +189,24 @@ function AllOrder(frm) {
+ 				error: function(xhr, status, error) { }
+ 
+ 			});
++			*/
+ 		}
+-
++		var jsonData = JSON.stringify(cpList);
++		
++		var form = document.createElement('form'); // 폼객체 생성
++		form.setAttribute('method', 'post'); //get,post 가능
++		form.setAttribute('action', "/market/orderPage"); //보내는 url
++		document.charset="utf-8";
++		var objs;
++		objs = document.createElement('input'); // 값이 들어있는 녀석의 형식
++		objs.setAttribute('type', 'hidden'); // 값이 들어있는 녀석의 type
++		objs.setAttribute('name', 'cpList'); // 객체이름
++		objs.setAttribute('value', jsonData); //객체값
++		objs.setAttribute('contentType', 'application/json');
++		form.appendChild(objs);
++		
++		document.body.appendChild(form);
++		form.submit();	
++	
+ 	}
+ }
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/js/detailProduct.js b/final_Project/src/main/webapp/resources/js/detailProduct.js
+new file mode 100644
+index 0000000..0215e80
+--- /dev/null
++++ b/final_Project/src/main/webapp/resources/js/detailProduct.js
+@@ -0,0 +1,111 @@
++const leftButton = (object) => {
++	let product_cnt = Number($(object).siblings('#product_cnt').text());
++	let priceSpan = $(object).parents('.modal-info-cnt').siblings('.modal-info-price').children('#product_price');
++	let product_price = Number($(priceSpan).text());
++	
++	if (product_cnt == 1) {
++		alert('한 개 이상을 선택해주세요.');
++		return;
++	} else {
++		$(object).siblings('#product_cnt').text('');
++		$(object).siblings('#product_cnt').text(product_cnt-1);
++		
++		$(priceSpan).text('');
++		$(priceSpan).text(product_price-(product_price/product_cnt));
++	}
++}
++
++
++const rightButton = (object) => {
++	let product_cnt = Number($(object).siblings('#product_cnt').text());
++	let priceSpan = $(object).parents('.modal-info-cnt').siblings('.modal-info-price').children('#product_price');
++	let product_price = Number($(priceSpan).text());
++	
++
++	$(object).siblings('#product_cnt').text('');
++	$(object).siblings('#product_cnt').text(product_cnt+1);
++	
++	$(priceSpan).text('');
++	$(priceSpan).text(product_price+(product_price/product_cnt));
++}
++
++
++const insertCart = () => {
++	let cust_id = document.getElementById('cust_id').innerText;
++	let product_cnt = $('#product_cnt').text();
++	let product_no = document.getElementById('product_no').innerText;
++	if(cust_id == ''){
++		alert("로그인 한 회원만 가능합니다.");
++		return;
++	}else{
++		let data = {
++			"cust_id":cust_id,
++			"product_no":product_no,
++			"product_cnt":product_cnt
++		}
++		
++		console.log(data);
++		
++		if (confirm('해당 상품을 장바구니에 넣으시겠습니까?')) {
++			$.ajax({
++				url:"insertCart",
++				type:"post",
++				data:JSON.stringify(data),
++				contentType:"application/json",
++				success:function(flag) {
++					console.log(flag);
++					let msg = (flag=='true'?'장바구니로 이동하시겠습니까?':'해당 상품은 이미 장바구니에 담겨있습니다. 장바구니로 이동하시겠습니까?') 
++					if (confirm(msg)) {
++						location.href = '/market/cartProduct';
++					}
++				}
++			});
++		}
++	}
++	
++}
++
++
++const changeColorBtn = () => {
++	for (var i = 0; i < 4; i++) {
++		$('.tap-button').eq(i).removeClass('btn-primary').addClass('btn-secondary');
++	}		
++}
++
++
++const reviewTap = () => {
++	changeColorBtn();
++	$('#reviewButton').removeClass('btn-secondary').addClass('btn-primary');
++	$('.detail-wrap').css('display','none');
++	$('.qna-wrap').css('display','none');
++	$('.exchange-wrap').css('display','none');
++	$('.review-wrap').css('display','block');
++}
++
++
++const detailTap = () => {
++	changeColorBtn();
++	$('#detailButton').removeClass('btn-secondary').addClass('btn-primary');
++	$('.review-wrap').css('display','none');
++	$('.qna-wrap').css('display','none');
++	$('.exchange-wrap').css('display','none');
++	$('.detail-wrap').css('display','block');
++}
++
++const qnaTap = () => {
++	changeColorBtn();
++	$('#qnaButton').removeClass('btn-secondary').addClass('btn-primary');
++	$('.detail-wrap').css('display','none');
++	$('.review-wrap').css('display','none');
++	$('.exchange-wrap').css('display','none');
++	$('.qna-wrap').css('display','block');
++}
++
++const exchangeTap = () => {
++	changeColorBtn();
++	$('#exchangeButton').removeClass('btn-secondary').addClass('btn-primary');
++	$('.detail-wrap').css('display','none');
++	$('.review-wrap').css('display','none');
++	$('.qna-wrap').css('display','none');
++	$('.exchange-wrap').css('display','block');
++}
+\ No newline at end of file
+diff --git a/final_Project/src/main/webapp/resources/js/orderPage.js b/final_Project/src/main/webapp/resources/js/orderPage.js
+index 8b13789..2946873 100644
+--- a/final_Project/src/main/webapp/resources/js/orderPage.js
++++ b/final_Project/src/main/webapp/resources/js/orderPage.js
+@@ -1 +1,3 @@
+ 
++	
++

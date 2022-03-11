@@ -32,8 +32,8 @@ public class CartController {
 	@RequestMapping("/market/cartProduct")
 	public ModelAndView cartProduct(HttpSession session) {
 		ModelAndView mav = new ModelAndView();
-		CustomerVO member = (CustomerVO)session.getAttribute("member");
-		mav.addObject("list", dao.cartProduct(member.getCust_id()));
+		String cust_id = (String)session.getAttribute("cust_id");
+		mav.addObject("list", dao.cartProduct(cust_id));
 		return mav;
 	}
 

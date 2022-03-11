@@ -9,12 +9,15 @@
 <title>Insert title here</title>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/mgr_listQna.css" type="text/css">
 </head>
 <body>
+<div><jsp:include page="../common/header.jsp"></jsp:include></div>
+	<div class="mgr_list">
 	<h2>1:1 문의</h2>
 	<br>
-	<table border="1">
-		<tr>
+	<table border="1"  width="80%">
+		<tr id="qna_name">
 			<td>번호</td>
 			<td>제목</td>			
 			<td>작성일</td>			
@@ -27,6 +30,13 @@
 			</tr>
 		</c:forEach>
 	</table>
-	
+		<div class="pagenation">
+			<c:forEach var="i" begin="1" end="${mgr_totalPage }">
+				<a href="/admin/mgr_listQna?mgr_pageNUM=${i }">${i }</a>&nbsp;&nbsp;
+						</c:forEach>
+		</div>
+	</div>
+	<div><jsp:include page="../common/footer.jsp"></jsp:include></div>
+
 </body>
 </html>

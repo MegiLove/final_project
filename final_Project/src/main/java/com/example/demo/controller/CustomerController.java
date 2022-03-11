@@ -38,10 +38,13 @@ public class CustomerController {
 	public ModelAndView join_submit(CustomerVO c){
 		ModelAndView mav = new ModelAndView();
 		int re = dao.insertCustomer(c);
+		System.out.println("insert수행결과:"+re);
 		if(re == 1) {
 			mav.setViewName("insertCustomerOK");
 			mav.addObject("msg",c.getCust_id()+"보글님 회원가입이 완료되었습니다.");
 		}else {
+			System.out.println("에러가 발생하였습니다.");
+			mav.addObject("msg","회원가입에 실패했습니다.");
 			mav.setViewName("/common/error");
 		}
 		return mav;
@@ -73,7 +76,7 @@ public class CustomerController {
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public ModelAndView login_submit(HttpSession session, String cust_id, String cust_pwd) {
 		
-		ModelAndView mav = new ModelAndView("loginOK");
+		ModelAndView mav = new ModelAndView("redirect:/main");
 		int re = dao.login(cust_id, cust_pwd);
 		String msg = "";
 		if(re == 1) {
@@ -141,12 +144,6 @@ public class CustomerController {
 		return mav;
 	}
 	
-	@RequestMapping(value = "/mypage/updateCustomer", method = RequestMethod.GET)
-	public void update_form(HttpSession session, Model model, String cust_id) {
-		CustomerVO member = (CustomerVO)session.getAttribute("member");
-		model.addAttribute("c",dao.detailCustomer(member.getCust_id()));
-	}
-	
 	@RequestMapping(value = "/mypage/updateCustomer", method = RequestMethod.POST)
 	public ModelAndView update_submit(CustomerVO c) {
 		ModelAndView mav = new ModelAndView();
@@ -160,31 +157,37 @@ public class CustomerController {
 		return mav;
 	}
 	
+	@RequestMapping(value = "/mypage/loginMypage", method = RequestMethod.GET)
+	public void mypageMain_form(HttpSession session, Model model) {
+		String cust_id = (String)session.getAttribute("cust_id");
+	}
+		
+	@RequestMapping(value = "/mypage/loginMypage", method = RequestMethod.POST)
+	public ModelAndView mypageMain_submit(HttpSession session, Model model, String cust_pwd) {
+		ModelAndView mav = new ModelAndView();
+		System.out.println(cust_pwd);
+		HashMap map = new HashMap();
+		map.put("cust_pwd", cust_pwd);
+		map.put("cust_id", (String)session.getAttribute("cust_id"));
+		int re = dao.mypage_login(map);
+		if(re == 1) {
+			CustomerVO member = (CustomerVO)session.getAttribute("member");
+			model.addAttribute("c",dao.detailCustomer(member.getCust_id()));
+			mav.setViewName("/mypage/updateCustomer");
+		}else {
+			mav.addObject("msg","비밀번호가 일치하지 않습니다.");
+			mav.setViewName("/common/error");
+		}
+		
+		return mav;
+	}
+	
 	@RequestMapping(value="/logout",method=RequestMethod.GET)
 	public String getLogout(HttpSession session) throws Exception{
 		session.invalidate();
 		return "redirect:/main";
 	}
-	
-	@RequestMapping(value = "mypageMain", method = RequestMethod.GET)
-	public void mypageMain_form(HttpSession session, Model model) {
-		String cust_id = (String)session.getAttribute("cust_id");
-	}
-		
-	@RequestMapping(value = "mypageMain", method = RequestMethod.POST)
-	public ModelAndView mypageMain_submit(String cust_id, String cust_pwd) {
-		ModelAndView mav = new ModelAndView();
-		System.out.println(cust_pwd);
-		int re = dao.mypage_login(cust_id);
-		if(re == 1) {
-			mav.setViewName("redirect:/main");
-		}else {
-			mav.addObject("msg","비밀번호가 일치하지 않습니다.");
-			mav.setViewName("/error");
-		}
-		
-		return mav;
-	}
+
 }
 
 

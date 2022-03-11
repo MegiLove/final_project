@@ -6,13 +6,26 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="../resources/css/contentReview.css" type="text/css">
+<link rel="stylesheet" href="../resources/css/mypageCommon.css" type="text/css">
 <link rel="stylesheet" href="../resources/css/common.css" type="text/css">
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 	<div id="container">
-		<div id="header"><!-- 헤더 --></div>
+		<div><jsp:include page="../common/header.jsp"></jsp:include></div>
 		<div class="page_article">
-			<div><!-- 메뉴 --></div>
+			<div id="snb">
+				<h2 class="tit_snb">마이보글</h2>
+				<div class="inner_snb">
+					<ul class="list_menu">
+						<li><a href="/mypage/orderList">주문 내역</a></li>
+						<li><a href="/mypage/listReviewWrite">상품 후기</a></li>
+						<li><a href="/mypage/listQna">상품 문의</a></li>
+						<li><a href="/mypage/loginMypage">개인 정보 수정</a></li>
+					</ul>
+				</div>
+			</div>
 			<div class="page_section">
 				<div class="head_article">
 					<h2>후기 상세</h2>
@@ -32,29 +45,30 @@
 								<tr>
 									<th>제목</th>
 									<td>
-										<div name="review_title">${c.review_title }</div>
+										<div class="r_title">${c.review_title }</div>
 									</td>
 								</tr>
 								<tr>
 									<th>후기내용</th>
 									<td>
-										<textarea id="fieldCmt" name="review_content" rows="10" cols="100" style="height:202px;">${c.review_content }</textarea>
+										<textarea class="r_content" rows="10" cols="80">${c.review_content }</textarea>
 									</td>
 								</tr>
 								<tr>
 									<th>첨부파일</th>
 									<td>
-										<img src="/images/${c.review_img }" onerror="this.style.display='none'">
+										<img class="r_img" src="/images/${c.review_img }" onerror="this.style.display='none'">
 									</td>
 								</tr>
 							</tbody>
 						</table>
-						<a href="/mypage/deleteReview/${c.review_no }">삭제</a>
+						<a class="btn_list" href="/mypage/listReviewComplete">목록</a>
+						<a class="btn_del" href="/mypage/deleteReview/${c.review_no }">삭제</a>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div id="footer"><!-- 푸터 --></div>
+		<div><jsp:include page="../common/footer.jsp"></jsp:include></div>
 	</div>
 </body>
 </html>
